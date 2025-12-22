@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f5f5f5;
     min-height: 100vh;
     padding: 20px;
     color: #333;
@@ -19,14 +19,18 @@ body {
 
 header {
     text-align: center;
-    color: white;
+    color: #333;
     margin-bottom: 30px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    padding: 20px 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
+    font-size: 2em;
+    margin: 0;
+    font-weight: 600;
 }
 
 .game-layout {
@@ -38,17 +42,19 @@ header h1 {
 
 .panel {
     background: white;
-    border-radius: 15px;
+    border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
 }
 
 .panel h2 {
-    color: #667eea;
+    color: #333;
     margin-bottom: 15px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #e0e0e0;
     padding-bottom: 10px;
+    font-size: 1.2em;
+    font-weight: 600;
 }
 
 .player-info {
@@ -65,47 +71,49 @@ header h1 {
 }
 
 .stat-label {
-    font-weight: bold;
+    font-weight: 500;
     min-width: 80px;
-    color: #555;
+    color: #666;
 }
 
 .stat-value {
-    color: #667eea;
-    font-weight: bold;
+    color: #333;
+    font-weight: 600;
 }
 
 .health-bar {
     flex: 1;
-    height: 25px;
+    height: 24px;
     background: #e0e0e0;
-    border-radius: 12px;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
     min-width: 150px;
+    border: 1px solid #d0d0d0;
 }
 
 .health-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    background: #4caf50;
     transition: width 0.3s ease;
-    border-radius: 12px;
+    border-radius: 4px;
 }
 
 .enemy-health-bar {
     width: 100%;
-    height: 30px;
+    height: 28px;
     background: #e0e0e0;
-    border-radius: 15px;
+    border-radius: 4px;
     overflow: hidden;
     margin: 10px 0;
+    border: 1px solid #d0d0d0;
 }
 
 .enemy-health-fill {
     height: 100%;
-    background: linear-gradient(90deg, #f44336, #ff9800);
+    background: #f44336;
     transition: width 0.3s ease;
-    border-radius: 15px;
+    border-radius: 4px;
 }
 
 .main-panel {
@@ -115,24 +123,31 @@ header h1 {
 }
 
 .location-info {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: #fafafa;
     padding: 20px;
-    border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    border-left: 4px solid #666;
 }
 
 .location-info h2 {
-    color: #667eea;
+    color: #333;
     margin-bottom: 10px;
     border: none;
     padding: 0;
+    font-size: 1.3em;
+}
+
+.location-info p {
+    color: #666;
+    line-height: 1.6;
 }
 
 .battle-area {
-    background: #fff3cd;
+    background: #fff8e1;
     padding: 20px;
-    border-radius: 10px;
-    border: 2px solid #ffc107;
+    border-radius: 8px;
+    border: 1px solid #ffc107;
 }
 
 .enemy-info {
@@ -141,39 +156,30 @@ header h1 {
 
 .enemy-info h3 {
     color: #d32f2f;
-    font-size: 1.5em;
+    font-size: 1.4em;
     margin-bottom: 15px;
+    font-weight: 600;
 }
 
 .log-area {
-    background: #f5f5f5;
+    background: #fafafa;
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 8px;
     max-height: 300px;
     overflow-y: auto;
-    border: 1px solid #ddd;
+    border: 1px solid #e0e0e0;
     min-height: 150px;
 }
 
 .log-entry {
     padding: 8px;
     margin: 5px 0;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #666;
     padding-left: 15px;
     background: white;
-    border-radius: 5px;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    border-radius: 4px;
+    font-size: 0.95em;
+    line-height: 1.5;
 }
 
 .action-buttons {
@@ -184,62 +190,102 @@ header h1 {
 }
 
 .btn {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease;
+    background: white;
+    color: #333;
 }
 
 .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    background: #f5f5f5;
 }
 
 .btn:active {
-    transform: translateY(0);
+    background: #e0e0e0;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #2196f3;
     color: white;
+    border-color: #2196f3;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: #f44336;
     color: white;
+    border-color: #f44336;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
 }
 
 .btn-warning {
-    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+    background: #ff9800;
     color: white;
+    border-color: #ff9800;
+}
+
+.btn-warning:hover {
+    background: #f57c00;
 }
 
 .btn-info {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: #00bcd4;
     color: white;
+    border-color: #00bcd4;
+}
+
+.btn-info:hover {
+    background: #0097a7;
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: #4caf50;
     color: white;
+    border-color: #4caf50;
+}
+
+.btn-secondary:hover {
+    background: #388e3c;
 }
 
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
+    background: #e0e0e0;
+    color: #999;
+    border-color: #ccc;
 }
 
 .enemy-details {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.enemy-details p {
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+    color: #666;
+}
+
+.enemy-details p:last-child {
+    border-bottom: none;
+}
+
+.enemy-details strong {
+    color: #333;
+    font-weight: 600;
 }
 
 /* 模態框樣式 */
@@ -252,34 +298,22 @@ header h1 {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
 }
 
 .modal-content {
     background-color: white;
     margin: 5% auto;
     padding: 30px;
-    border-radius: 15px;
+    border-radius: 8px;
     width: 90%;
     max-width: 600px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    border: 1px solid #e0e0e0;
 }
 
 .close {
-    color: #aaa;
+    color: #999;
     float: right;
     font-size: 28px;
     font-weight: bold;
@@ -287,10 +321,11 @@ header h1 {
     position: absolute;
     right: 20px;
     top: 20px;
+    line-height: 1;
 }
 
 .close:hover {
-    color: #000;
+    color: #333;
 }
 
 .shop-items {
@@ -301,28 +336,28 @@ header h1 {
 }
 
 .shop-item {
-    background: #f5f5f5;
+    background: #fafafa;
     padding: 15px;
-    border-radius: 10px;
-    border: 2px solid #ddd;
-    transition: all 0.3s ease;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    transition: border-color 0.2s ease;
 }
 
 .shop-item:hover {
-    border-color: #667eea;
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-color: #666;
 }
 
 .shop-item h4 {
-    color: #667eea;
+    color: #333;
     margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .shop-item p {
     color: #666;
     margin: 5px 0;
     font-size: 0.9em;
+    line-height: 1.5;
 }
 
 .location-selector {
@@ -334,14 +369,14 @@ header h1 {
 }
 
 .location-selector label {
-    font-weight: bold;
-    color: #555;
+    font-weight: 500;
+    color: #666;
 }
 
 .location-select {
     padding: 8px 12px;
-    border: 2px solid #667eea;
-    border-radius: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     font-size: 14px;
     background: white;
     color: #333;
@@ -352,28 +387,30 @@ header h1 {
 
 .location-select:focus {
     outline: none;
-    border-color: #764ba2;
+    border-color: #666;
 }
 
 .shop-item button {
     width: 100%;
     margin-top: 10px;
     padding: 10px;
-    background: #667eea;
+    background: #2196f3;
     color: white;
-    border: none;
-    border-radius: 5px;
+    border: 1px solid #2196f3;
+    border-radius: 4px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
 }
 
 .shop-item button:hover {
-    background: #764ba2;
+    background: #1976d2;
 }
 
 .shop-item button:disabled {
-    background: #ccc;
+    background: #e0e0e0;
+    color: #999;
+    border-color: #ccc;
     cursor: not-allowed;
 }
 
@@ -397,4 +434,3 @@ header h1 {
         order: 0;
     }
 }
-

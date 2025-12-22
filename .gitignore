@@ -1,0 +1,19 @@
+# 系統文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 編輯器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 臨時文件
+*.log
+*.tmp
+
+# 不需要上傳的文件
+start_server.bat
+

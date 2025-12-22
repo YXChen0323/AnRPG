@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字RPG - 冒險之旅</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🗡️ 文字RPG - 冒險之旅</h1>
+        </header>
+
+        <div class="game-layout">
+            <!-- 角色狀態面板 -->
+            <div class="panel player-panel">
+                <h2>角色狀態</h2>
+                <div class="player-info">
+                    <div class="stat-item">
+                        <span class="stat-label">生命值:</span>
+                        <div class="health-bar">
+                            <div class="health-fill" id="healthFill"></div>
+                        </div>
+                        <span class="stat-value" id="healthText">100/100</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">等級:</span>
+                        <span class="stat-value" id="level">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">經驗值:</span>
+                        <span class="stat-value" id="exp">0/100</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">攻擊力:</span>
+                        <span class="stat-value" id="attack">10</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">防禦力:</span>
+                        <span class="stat-value" id="defense">5</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">金幣:</span>
+                        <span class="stat-value" id="gold">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲主區域 -->
+            <div class="panel main-panel">
+                <div class="location-info">
+                    <h2 id="locationName">起始村莊</h2>
+                    <p id="locationDescription">你站在一個寧靜的村莊入口，遠處傳來怪物的低吼聲...</p>
+                    <div class="location-selector">
+                        <label for="locationSelect">選擇地點：</label>
+                        <select id="locationSelect" class="location-select">
+                            <option value="0">起始村莊</option>
+                            <option value="1">黑暗森林</option>
+                            <option value="2">荒蕪平原</option>
+                            <option value="3">惡魔洞穴</option>
+                        </select>
+                        <button class="btn btn-secondary" id="moveBtn">移動</button>
+                    </div>
+                </div>
+
+                <!-- 戰鬥區域 -->
+                <div class="battle-area" id="battleArea" style="display: none;">
+                    <div class="enemy-info">
+                        <h3 id="enemyName"></h3>
+                        <div class="enemy-health-bar">
+                            <div class="enemy-health-fill" id="enemyHealthFill"></div>
+                        </div>
+                        <p id="enemyHealthText"></p>
+                    </div>
+                </div>
+
+                <!-- 日誌區域 -->
+                <div class="log-area" id="logArea">
+                    <p class="log-entry">歡迎來到文字RPG！開始你的冒險吧！</p>
+                </div>
+
+                <!-- 行動按鈕 -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="exploreBtn">探索</button>
+                    <button class="btn btn-danger" id="battleBtn" style="display: none;">戰鬥</button>
+                    <button class="btn btn-warning" id="bossBtn" style="display: none;">挑戰Boss</button>
+                    <button class="btn btn-info" id="restBtn">休息</button>
+                    <button class="btn btn-secondary" id="shopBtn">商店</button>
+                </div>
+            </div>
+
+            <!-- 敵人狀態面板 -->
+            <div class="panel enemy-panel" id="enemyPanel" style="display: none;">
+                <h2>敵人資訊</h2>
+                <div class="enemy-details" id="enemyDetails"></div>
+            </div>
+        </div>
+
+        <!-- 商店模態框 -->
+        <div class="modal" id="shopModal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" id="closeShop">&times;</span>
+                <h2>商店</h2>
+                <div class="shop-items" id="shopItems"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
+

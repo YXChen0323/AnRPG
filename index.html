@@ -68,10 +68,7 @@
                 <div class="battle-area" id="battleArea" style="display: none;">
                     <div class="enemy-info">
                         <h3 id="enemyName"></h3>
-                        <div class="enemy-health-bar">
-                            <div class="enemy-health-fill" id="enemyHealthFill"></div>
-                        </div>
-                        <p id="enemyHealthText"></p>
+                        <p id="battleStatus">準備戰鬥！</p>
                     </div>
                 </div>
 
@@ -93,6 +90,11 @@
             <!-- 敵人狀態面板 -->
             <div class="panel enemy-panel" id="enemyPanel" style="display: none;">
                 <h2>敵人資訊</h2>
+                <div class="enemy-name-display" id="enemyNameDisplay"></div>
+                <div class="enemy-health-bar">
+                    <div class="enemy-health-fill" id="enemyHealthFill"></div>
+                </div>
+                <p class="enemy-health-text" id="enemyHealthText"></p>
                 <div class="enemy-details" id="enemyDetails"></div>
             </div>
         </div>

@@ -287,10 +287,45 @@ header h1 {
     border-color: #ccc;
 }
 
+.enemy-name-display {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #d32f2f;
+    margin-bottom: 15px;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.enemy-panel .enemy-health-bar {
+    width: 100%;
+    height: 28px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 15px 0;
+    border: 1px solid #d0d0d0;
+}
+
+.enemy-panel .enemy-health-fill {
+    height: 100%;
+    background: #f44336;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.enemy-panel .enemy-health-text {
+    text-align: center;
+    margin: 5px 0 15px 0;
+    font-weight: 600;
+    color: #333;
+}
+
 .enemy-details {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: 10px;
 }
 
 .enemy-details p {

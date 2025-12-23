@@ -37,11 +37,12 @@ body {
 header {
     text-align: center;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     padding: 10px 0;
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
 }
 
 header h1 {

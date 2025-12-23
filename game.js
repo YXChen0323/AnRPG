@@ -155,13 +155,21 @@ const gameState = {
         { name: '終極魔王', baseHealth: 500, baseAttack: 30, baseDefense: 20, baseExp: 1000, baseGold: 500 }
     ],
     shop: [
-        { name: '生命藥水', type: 'heal', value: 50, cost: 25, description: '恢復50點生命值', stock: -1 },
-        { name: '大生命藥水', type: 'heal', value: 100, cost: 50, description: '恢復100點生命值', stock: -1 },
-        { name: '攻擊藥劑', type: 'attack', value: 3, cost: 60, description: '永久增加3點攻擊力', stock: -1 },
-        { name: '防禦藥劑', type: 'defense', value: 3, cost: 60, description: '永久增加3點防禦力', stock: -1 },
-        { name: '生命上限藥劑', type: 'maxHealth', value: 20, cost: 100, description: '永久增加20點最大生命值', stock: -1 },
-        { name: '暴擊藥劑', type: 'critChance', value: 0.05, cost: 150, description: '永久增加5%暴擊率', stock: -1 },
-        { name: '閃避藥劑', type: 'dodgeChance', value: 0.03, cost: 150, description: '永久增加3%閃避率', stock: -1 }
+        // 恢復類物品
+        { name: '生命藥水', type: 'heal', value: 50, cost: 25, description: '恢復50點生命值', stock: -1, category: 'consumable', icon: '💊' },
+        { name: '大生命藥水', type: 'heal', value: 100, cost: 50, description: '恢復100點生命值', stock: -1, category: 'consumable', icon: '🧪' },
+        { name: '超級生命藥水', type: 'heal', value: 200, cost: 120, description: '恢復200點生命值', stock: -1, category: 'consumable', icon: '⚗️' },
+        // 永久屬性提升
+        { name: '攻擊藥劑', type: 'attack', value: 3, cost: 60, description: '永久增加3點攻擊力', stock: -1, category: 'permanent', icon: '⚔️' },
+        { name: '防禦藥劑', type: 'defense', value: 3, cost: 60, description: '永久增加3點防禦力', stock: -1, category: 'permanent', icon: '🛡️' },
+        { name: '生命上限藥劑', type: 'maxHealth', value: 20, cost: 100, description: '永久增加20點最大生命值', stock: -1, category: 'permanent', icon: '❤️' },
+        { name: '暴擊藥劑', type: 'critChance', value: 0.05, cost: 150, description: '永久增加5%暴擊率', stock: -1, category: 'permanent', icon: '💥' },
+        { name: '閃避藥劑', type: 'dodgeChance', value: 0.03, cost: 150, description: '永久增加3%閃避率', stock: -1, category: 'permanent', icon: '🌀' },
+        // 高級物品
+        { name: '力量精華', type: 'attack', value: 5, cost: 200, description: '永久增加5點攻擊力', stock: -1, category: 'premium', icon: '✨' },
+        { name: '堅韌精華', type: 'defense', value: 5, cost: 200, description: '永久增加5點防禦力', stock: -1, category: 'premium', icon: '💎' },
+        { name: '生命精華', type: 'maxHealth', value: 50, cost: 300, description: '永久增加50點最大生命值', stock: -1, category: 'premium', icon: '🌟' },
+        { name: '經驗藥水', type: 'exp', value: 100, cost: 80, description: '立即獲得100點經驗值', stock: -1, category: 'consumable', icon: '📚' }
     ],
     quests: [
         { id: 1, name: '新手任務', description: '擊敗3隻怪物', target: 'kills', targetValue: 3, reward: { gold: 50, exp: 30 }, completed: false },
@@ -824,21 +832,59 @@ function updateInfoPanel(type, data = {}) {
             
         case 'shop':
             elements.infoPanelTitle.textContent = '商店';
-            let shopHTML = '<div class="shop-items-list">';
+            const currentGold = DataManager.getNumber(gameState.player.gold, 0);
+            let shopHTML = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                    <p style="margin: 0; font-size: 1.1em;"><strong>💰 當前金幣: ${currentGold}</strong></p>
+                </div>
+                <div class="shop-items-list">`;
+            
+            // 按類別分組顯示
+            const categories = {
+                consumable: { name: '消耗品', items: [] },
+                permanent: { name: '永久提升', items: [] },
+                premium: { name: '高級物品', items: [] }
+            };
+            
             gameState.shop.forEach((item, index) => {
-                const canAfford = DataManager.getNumber(gameState.player.gold, 0) >= DataManager.getNumber(item.cost, 0);
-                const isOutOfStock = item.stock === 0;
-                shopHTML += `
-                    <div class="shop-item">
-                        <h4>${item.name}</h4>
-                        <p>${item.description}</p>
-                        <p><strong>價格: ${item.cost} 金幣</strong></p>
-                        <button class="btn btn-shop" ${!canAfford || isOutOfStock ? 'disabled' : ''} onclick="buyItem(${index})">
-                            ${isOutOfStock ? '已售完' : !canAfford ? '金幣不足' : '購買'}
-                        </button>
-                    </div>
-                `;
+                const category = item.category || 'consumable';
+                if (categories[category]) {
+                    categories[category].items.push({ item, index });
+                }
             });
+            
+            // 顯示每個類別
+            Object.keys(categories).forEach(categoryKey => {
+                const category = categories[categoryKey];
+                if (category.items.length > 0) {
+                    shopHTML += `<div style="margin-bottom: 20px;"><h3 style="color: #666; font-size: 1em; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #e0e0e0;">${category.name}</h3>`;
+                    
+                    category.items.forEach(({ item, index }) => {
+                        const canAfford = currentGold >= DataManager.getNumber(item.cost, 0);
+                        const isOutOfStock = item.stock === 0;
+                        const icon = item.icon || '📦';
+                        
+                        shopHTML += `
+                            <div class="shop-item" style="background: ${canAfford ? '#fff' : '#f5f5f5'}; border: 1px solid ${canAfford ? '#4caf50' : '#ccc'}; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="font-size: 1.5em;">${icon}</span>
+                                    <h4 style="margin: 0; color: #333; font-size: 1em;">${item.name}</h4>
+                                </div>
+                                <p style="margin: 5px 0; color: #666; font-size: 0.9em; line-height: 1.4;">${item.description}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                    <p style="margin: 0; font-weight: 600; color: #ff9800;"><strong>💰 ${item.cost} 金幣</strong></p>
+                                    <button class="btn btn-shop" ${!canAfford || isOutOfStock ? 'disabled' : ''} onclick="buyItem(${index})" style="padding: 8px 16px; font-size: 0.9em;">
+                                        ${isOutOfStock ? '已售完' : !canAfford ? '💰不足' : '購買'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    shopHTML += '</div>';
+                }
+            });
+            
             shopHTML += '</div>';
             elements.infoPanelContent.innerHTML = shopHTML;
             break;

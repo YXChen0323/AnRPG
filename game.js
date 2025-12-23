@@ -1194,6 +1194,10 @@ function updateInfoPanel(type, data = {}) {
             `;
             break;
             
+        case 'blacksmith':
+            updateBlacksmithPanel();
+            break;
+            
         case 'action':
             elements.infoPanelTitle.textContent = '🏘️ 城鎮行動';
             const player = gameState.player;

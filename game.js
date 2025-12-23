@@ -956,15 +956,8 @@ function updateInfoPanel(type, data = {}) {
             
         case 'default':
         default:
-            const location = gameState.currentLocation;
-            const isTown = (location && location.isTown === true) || (location && location.name === '起始村莊');
-            
-            if (isTown) {
-                updateInfoPanel('training');
-            } else {
-                elements.infoPanelTitle.textContent = '資訊';
-                elements.infoPanelContent.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">選擇行動來查看詳細資訊</p>';
-            }
+            elements.infoPanelTitle.textContent = '資訊';
+            elements.infoPanelContent.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">選擇行動來查看詳細資訊</p>';
             break;
     }
 }

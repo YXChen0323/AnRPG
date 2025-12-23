@@ -224,10 +224,19 @@ function initGame() {
     const startingLocation = gameState.locations.find(loc => loc.name === '起始村莊');
     if (startingLocation) {
         gameState.currentLocation = { ...startingLocation };
+    } else {
+        // 如果找不到，使用第一個地點
+        gameState.currentLocation = { ...gameState.locations[0] };
+    }
+    
+    // 確保 isTown 屬性正確設置
+    if (!gameState.currentLocation.hasOwnProperty('isTown')) {
+        gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
     }
     
     updateUI();
     updateInfoPanel('default'); // 初始化右側資訊面板
+    updateActionButtons(); // 確保按鈕狀態正確
     addLog('遊戲開始！歡迎來到文字RPG世界！');
     addLog('在起始村莊中，你可以進行訓練來提升能力。');
     addLog('離開城鎮後，就可以探索和戰鬥了！');
@@ -446,16 +455,22 @@ function updateUI() {
 // 更新行動按鈕顯示
 function updateActionButtons() {
     const location = gameState.currentLocation;
-    const isTown = location.isTown || false;
+    // 確保 isTown 屬性正確判斷
+    const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
     
-    // 在城鎮中隱藏探索按鈕，顯示訓練按鈕
+    // 在城鎮中隱藏探索按鈕，顯示訓練區域（強化設施）
     if (elements.exploreBtn) {
         elements.exploreBtn.style.display = isTown ? 'none' : 'inline-block';
     }
     
-    // 顯示/隱藏訓練區域
+    // 顯示/隱藏訓練區域（強化設施）
     if (elements.trainingArea) {
         elements.trainingArea.style.display = isTown ? 'block' : 'none';
+    }
+    
+    // 在城鎮中，右側面板顯示訓練說明
+    if (isTown) {
+        updateInfoPanel('training');
     }
 }
 
@@ -773,10 +788,35 @@ function updateInfoPanel(type, data = {}) {
             elements.infoPanelContent.innerHTML = shopHTML;
             break;
             
+        case 'training':
+            elements.infoPanelTitle.textContent = '訓練設施';
+            elements.infoPanelContent.innerHTML = `
+                <div style="color: #666; line-height: 1.6;">
+                    <p style="margin-bottom: 15px;"><strong>在城鎮中，你可以通過訓練來提升各項能力：</strong></p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 8px 0;">• <strong>體能訓練</strong> - 提升最大生命值</li>
+                        <li style="margin: 8px 0;">• <strong>力量訓練</strong> - 提升攻擊力</li>
+                        <li style="margin: 8px 0;">• <strong>防禦訓練</strong> - 提升防禦力</li>
+                        <li style="margin: 8px 0;">• <strong>精準訓練</strong> - 提升暴擊率</li>
+                        <li style="margin: 8px 0;">• <strong>敏捷訓練</strong> - 提升閃避率</li>
+                        <li style="margin: 8px 0;">• <strong>冥想訓練</strong> - 提升經驗獲取倍率</li>
+                    </ul>
+                    <p style="margin-top: 15px; font-size: 0.9em; color: #888;">訓練效果會根據你的等級、當前能力和訓練次數進行補正。</p>
+                </div>
+            `;
+            break;
+            
         case 'default':
         default:
-            elements.infoPanelTitle.textContent = '資訊';
-            elements.infoPanelContent.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">選擇行動來查看詳細資訊</p>';
+            const location = gameState.currentLocation;
+            const isTown = (location && location.isTown === true) || (location && location.name === '起始村莊');
+            
+            if (isTown) {
+                updateInfoPanel('training');
+            } else {
+                elements.infoPanelTitle.textContent = '資訊';
+                elements.infoPanelContent.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">選擇行動來查看詳細資訊</p>';
+            }
             break;
     }
 }
@@ -1018,13 +1058,19 @@ function moveToLocation() {
     
     gameState.currentLocation = { ...newLocation };
     
-    if (newLocation.isTown) {
+    // 確保 isTown 屬性正確設置
+    if (!gameState.currentLocation.hasOwnProperty('isTown')) {
+        gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
+    }
+    
+    if (gameState.currentLocation.isTown) {
         addLog(`你來到了${gameState.currentLocation.name}。這裡很安全，可以進行訓練。`);
     } else {
         addLog(`你來到了${gameState.currentLocation.name}。這裡充滿危險，準備好戰鬥吧！`);
     }
     
     updateUI();
+    updateActionButtons(); // 更新按鈕顯示
     
     // 更新選擇器顯示
     elements.locationSelect.value = locationIndex;

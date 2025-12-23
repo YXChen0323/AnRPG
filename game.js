@@ -1268,13 +1268,13 @@ function updateInfoPanel(type, data = {}) {
                         </div>
                         
                         <!-- 拜訪鐵匠 -->
-                        <div style="background: #fff; border: 1px solid #607d8b; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('blacksmith')" onmouseover="this.style.background='#f0f4f7'" onmouseout="this.style.background='#fff'">
+                        <div style="background: #fff; border: 1px solid #607d8b; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="openBlacksmith()" onmouseover="this.style.background='#f0f4f7'" onmouseout="this.style.background='#fff'">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                                 <span style="font-size: 1.5em;">🔨</span>
-                                <h4 style="margin: 0; color: #333; font-size: 1em;">拜訪鐵匠</h4>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">鐵匠鋪</h4>
                             </div>
-                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">向鐵匠學習，獲得屬性提升</p>
-                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 15 體力 | 💰 費用: 30金幣</p>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">打造、修復、販賣裝備</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 免費進入</p>
                         </div>
                     </div>
                     

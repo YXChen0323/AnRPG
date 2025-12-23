@@ -6,7 +6,10 @@
 
 html, body {
     height: 100%;
+    width: 100%;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 body {
@@ -24,10 +27,11 @@ body {
     width: 100%;
     margin: 0 auto;
     padding: 10px 15px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     height: 100vh;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 header {
@@ -50,9 +54,10 @@ header h1 {
     display: grid;
     grid-template-columns: 280px 1fr 320px;
     gap: 12px;
-    margin-bottom: 12px;
-    height: calc(100vh - 100px);
-    min-height: 600px;
+    margin-bottom: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .panel {

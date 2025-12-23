@@ -242,10 +242,43 @@ const elements = {
 };
 
 // 初始化遊戲
+// 自動恢復體力系統（每5分鐘）
+let energyRecoveryTimer = null;
+let lastEnergyRecoveryTime = Date.now();
+
+function startEnergyRecoveryTimer() {
+    // 清除舊的定時器（如果存在）
+    if (energyRecoveryTimer) {
+        clearInterval(energyRecoveryTimer);
+    }
+    
+    // 每5分鐘（300000毫秒）恢復一次體力
+    energyRecoveryTimer = setInterval(() => {
+        const player = gameState.player;
+        const maxEnergy = DataManager.getNumber(player.maxEnergy, 100);
+        const currentEnergy = DataManager.getNumber(player.energy, 0);
+        
+        // 每5分鐘恢復20%體力（讓玩家可以長久遊玩）
+        const energyRestore = Math.floor(maxEnergy * 0.2);
+        const newEnergy = Math.min(maxEnergy, currentEnergy + energyRestore);
+        
+        if (newEnergy > currentEnergy) {
+            player.energy = newEnergy;
+            addLog(`⏰ 時間流逝，你恢復了 ${energyRestore} 點體力（剩餘: ${player.energy}/${maxEnergy}）`);
+            updateUI();
+        }
+        
+        lastEnergyRecoveryTime = Date.now();
+    }, 300000); // 5分鐘 = 300000毫秒
+}
+
 function initGame() {
     // 初始化所有數據，確保沒有 NaN
     DataManager.initPlayer(gameState.player);
     gameState.locations.forEach(loc => DataManager.initLocation(loc));
+    
+    // 啟動自動恢復體力定時器
+    startEnergyRecoveryTimer();
     
     // 確保當前地點設置為起始村莊
     const startingLocation = gameState.locations.find(loc => loc.name === '起始村莊');
@@ -1366,10 +1399,11 @@ function challengeBoss() {
 function victory(enemy) {
     addLog(`你擊敗了${enemy.name}！`);
     
-    // 獲得經驗值（應用經驗倍率）
+    // 獲得經驗值（應用經驗倍率，並降低經驗獲取）
     const baseExp = DataManager.getNumber(enemy.exp, 0);
     const expMultiplier = DataManager.getNumber(gameState.player.expMultiplier, 1.0);
-    const expGain = DataManager.safeMath(() => Math.floor(baseExp * expMultiplier), baseExp);
+    // 降低經驗獲取：原本的70%（讓升級更慢）
+    const expGain = DataManager.safeMath(() => Math.floor(baseExp * expMultiplier * 0.7), Math.floor(baseExp * 0.7));
     const currentExp = DataManager.getNumber(gameState.player.exp, 0);
     gameState.player.exp = currentExp + expGain;
     addLog(`獲得${expGain}點經驗值！${expMultiplier > 1.0 ? `(倍率: ${expMultiplier.toFixed(2)}x)` : ''}`);
@@ -1413,7 +1447,8 @@ function checkLevelUp() {
         gameState.player.level = currentLevel + 1;
         gameState.player.exp = currentExp;
         
-        expToNext = DataManager.safeMath(() => Math.floor(expToNext * 1.5), 150);
+        // 調整升級所需經驗值：每級增加更多經驗（從1.5倍改為1.8倍，讓升級更慢）
+        expToNext = DataManager.safeMath(() => Math.floor(expToNext * 1.8), 180);
         gameState.player.expToNext = expToNext;
         
         // 升級獎勵
@@ -1466,10 +1501,10 @@ function rest() {
     
     player.health = Math.min(maxHealth, currentHealth + healAmount);
     
-    // 恢復體力（休息恢復50%體力）
+    // 恢復體力（休息恢復30%體力，降低恢復量）
     const maxEnergy = DataManager.getNumber(player.maxEnergy, 100);
     const currentEnergy = DataManager.getNumber(player.energy, 0);
-    const energyRestore = DataManager.safeMath(() => Math.floor(maxEnergy * 0.5), 50);
+    const energyRestore = DataManager.safeMath(() => Math.floor(maxEnergy * 0.3), 30);
     player.energy = Math.min(maxEnergy, currentEnergy + energyRestore);
     
     addLog(`你休息了一會兒，恢復了${healAmount}點生命值和${energyRestore}點體力。`);
@@ -1556,16 +1591,16 @@ function stayAtInn(restType = 'luxury') {
     const maxEnergy = DataManager.getNumber(gameState.player.maxEnergy, 100);
     const currentEnergy = DataManager.getNumber(gameState.player.energy, 0);
     let energyRestore = 0;
-    switch(restType) {
+            switch(restType) {
         case 'basic':
-            energyRestore = Math.floor(maxEnergy * 0.3);
+            energyRestore = Math.floor(maxEnergy * 0.2); // 降低恢復量
             break;
         case 'good':
-            energyRestore = Math.floor(maxEnergy * 0.6);
+            energyRestore = Math.floor(maxEnergy * 0.5); // 降低恢復量
             break;
         case 'luxury':
         default:
-            energyRestore = maxEnergy; // 完全恢復
+            energyRestore = Math.floor(maxEnergy * 0.8); // 降低恢復量，不再完全恢復
             break;
     }
     gameState.player.energy = Math.min(maxEnergy, currentEnergy + energyRestore);
@@ -1601,7 +1636,7 @@ function executeTownAction(actionType) {
                     content: '最近黑暗森林中出現了強大的怪物，有冒險者懸賞擊敗這些怪物，獎勵豐厚！',
                     reward: () => {
                         const goldGain = 10 + playerLevel * 2;
-                        const expGain = 5 + playerLevel;
+                        const expGain = Math.floor((5 + playerLevel) * 0.5); // 降低經驗獲取
                         player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
                         player.exp = DataManager.getNumber(player.exp, 0) + expGain;
                         addLog(`💰 獲得 ${goldGain} 金幣和 ${expGain} 經驗值！`);
@@ -1620,7 +1655,7 @@ function executeTownAction(actionType) {
                     title: '惡魔洞穴的挑戰',
                     content: '惡魔洞穴是Boss的巢穴，只有最強大的冒險者才敢進入。成功者將獲得豐厚獎勵！',
                     reward: () => {
-                        const expGain = 10 + playerLevel * 2;
+                        const expGain = Math.floor((10 + playerLevel * 2) * 0.5); // 降低經驗獲取
                         player.exp = DataManager.getNumber(player.exp, 0) + expGain;
                         addLog(`📚 獲得 ${expGain} 經驗值！`);
                     }
@@ -1653,7 +1688,7 @@ function executeTownAction(actionType) {
                 {
                     content: '惡魔洞穴是Boss的巢穴，只有強大的冒險者才敢進入。',
                     reward: () => {
-                        const expGain = 3 + playerLevel;
+                        const expGain = Math.floor((3 + playerLevel) * 0.5); // 降低經驗獲取
                         player.exp = DataManager.getNumber(player.exp, 0) + expGain;
                         addLog(`📚 獲得 ${expGain} 經驗值！`);
                     }
@@ -1712,17 +1747,17 @@ function executeTownAction(actionType) {
                 {
                     name: '搬運貨物',
                     gold: 20 + playerLevel * 3,
-                    exp: 10 + playerLevel * 2
+                    exp: Math.floor((10 + playerLevel * 2) * 0.5) // 降低經驗獲取
                 },
                 {
                     name: '驅趕野獸',
                     gold: 25 + playerLevel * 4,
-                    exp: 15 + playerLevel * 3
+                    exp: Math.floor((15 + playerLevel * 3) * 0.5) // 降低經驗獲取
                 },
                 {
                     name: '修復建築',
                     gold: 30 + playerLevel * 5,
-                    exp: 20 + playerLevel * 4
+                    exp: Math.floor((20 + playerLevel * 4) * 0.5) // 降低經驗獲取
                 }
             ];
             
@@ -1785,7 +1820,7 @@ function executeTownAction(actionType) {
             } else if (treasureChance < 0.7) {
                 // 找到中等寶藏
                 const mediumGold = 30 + playerLevel * 4 + Math.floor(Math.random() * 30);
-                const mediumExp = 10 + playerLevel * 2;
+                const mediumExp = Math.floor((10 + playerLevel * 2) * 0.5); // 降低經驗獲取
                 player.gold = DataManager.getNumber(player.gold, 0) + mediumGold;
                 player.exp = DataManager.getNumber(player.exp, 0) + mediumExp;
                 player.totalGold = DataManager.getNumber(player.totalGold, 0) + mediumGold;
@@ -1794,7 +1829,7 @@ function executeTownAction(actionType) {
             } else if (treasureChance < 0.9) {
                 // 找到大寶藏
                 const largeGold = 50 + playerLevel * 6 + Math.floor(Math.random() * 50);
-                const largeExp = 20 + playerLevel * 3;
+                const largeExp = Math.floor((20 + playerLevel * 3) * 0.5); // 降低經驗獲取
                 player.gold = DataManager.getNumber(player.gold, 0) + largeGold;
                 player.exp = DataManager.getNumber(player.exp, 0) + largeExp;
                 player.totalGold = DataManager.getNumber(player.totalGold, 0) + largeGold;
@@ -1803,7 +1838,7 @@ function executeTownAction(actionType) {
             } else {
                 // 找到稀有寶藏
                 const rareGold = 100 + playerLevel * 10;
-                const rareExp = 50 + playerLevel * 5;
+                const rareExp = Math.floor((50 + playerLevel * 5) * 0.5); // 降低經驗獲取
                 player.gold = DataManager.getNumber(player.gold, 0) + rareGold;
                 player.exp = DataManager.getNumber(player.exp, 0) + rareExp;
                 player.totalGold = DataManager.getNumber(player.totalGold, 0) + rareGold;

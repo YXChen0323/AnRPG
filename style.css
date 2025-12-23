@@ -357,7 +357,7 @@ header h1 {
     border-bottom: 2px solid #e0e0e0;
 }
 
-.enemy-panel .enemy-health-bar {
+.enemy-health-bar {
     width: 100%;
     height: 28px;
     background: #e0e0e0;
@@ -367,14 +367,14 @@ header h1 {
     border: 1px solid #d0d0d0;
 }
 
-.enemy-panel .enemy-health-fill {
+.enemy-health-fill {
     height: 100%;
     background: #f44336;
     transition: width 0.3s ease;
     border-radius: 4px;
 }
 
-.enemy-panel .enemy-health-text {
+.enemy-health-text {
     text-align: center;
     margin: 5px 0 15px 0;
     font-weight: 600;
@@ -443,11 +443,11 @@ header h1 {
     color: #333;
 }
 
-.shop-items {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
+.shop-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 .shop-item {
@@ -505,7 +505,7 @@ header h1 {
     border-color: #666;
 }
 
-.shop-item button {
+.btn-shop {
     width: 100%;
     margin-top: 10px;
     padding: 10px;
@@ -516,13 +516,14 @@ header h1 {
     cursor: pointer;
     font-weight: 500;
     transition: background-color 0.2s ease;
+    font-size: 14px;
 }
 
-.shop-item button:hover {
+.btn-shop:hover {
     background: #1976d2;
 }
 
-.shop-item button:disabled {
+.btn-shop:disabled {
     background: #e0e0e0;
     color: #999;
     border-color: #ccc;

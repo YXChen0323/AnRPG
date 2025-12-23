@@ -200,11 +200,9 @@ const elements = {
     bossBtn: document.getElementById('bossBtn'),
     restBtn: document.getElementById('restBtn'),
     shopBtn: document.getElementById('shopBtn'),
-    enemyPanel: document.getElementById('enemyPanel'),
-    enemyDetails: document.getElementById('enemyDetails'),
-    shopModal: document.getElementById('shopModal'),
-    shopItems: document.getElementById('shopItems'),
-    closeShop: document.getElementById('closeShop'),
+    infoPanel: document.getElementById('infoPanel'),
+    infoPanelTitle: document.getElementById('infoPanelTitle'),
+    infoPanelContent: document.getElementById('infoPanelContent'),
     locationSelect: document.getElementById('locationSelect'),
     moveBtn: document.getElementById('moveBtn'),
     trainingArea: document.getElementById('trainingArea'),
@@ -229,6 +227,7 @@ function initGame() {
     }
     
     updateUI();
+    updateInfoPanel('default'); // 初始化右側資訊面板
     addLog('遊戲開始！歡迎來到文字RPG世界！');
     addLog('在起始村莊中，你可以進行訓練來提升能力。');
     addLog('離開城鎮後，就可以探索和戰鬥了！');
@@ -701,7 +700,6 @@ function showBattleUI() {
     
     elements.battleArea.style.display = 'block';
     elements.battleBtn.style.display = 'inline-block';
-    elements.enemyPanel.style.display = 'block';
     elements.exploreBtn.disabled = true;
     updateEnemyUI();
 }
@@ -711,35 +709,86 @@ function hideBattleUI() {
     elements.battleArea.style.display = 'none';
     elements.battleBtn.style.display = 'none';
     elements.bossBtn.style.display = 'none';
-    elements.enemyPanel.style.display = 'none';
     elements.exploreBtn.disabled = false;
     if (elements.battleStatus) {
         elements.battleStatus.textContent = '準備戰鬥！';
     }
     gameState.currentEnemy = null;
-    updateEnemyUI(); // 清空敵人資訊顯示
+    updateInfoPanel('default'); // 恢復默認顯示
 }
 
-// 更新敵人UI
+// 更新右側資訊面板
+function updateInfoPanel(type, data = {}) {
+    if (!elements.infoPanel || !elements.infoPanelTitle || !elements.infoPanelContent) return;
+    
+    switch(type) {
+        case 'enemy':
+            if (!gameState.currentEnemy) {
+                updateInfoPanel('default');
+                return;
+            }
+            const enemy = DataManager.initEnemy(gameState.currentEnemy);
+            const health = DataManager.getNumber(enemy.health, 0);
+            const maxHealth = DataManager.getNumber(enemy.maxHealth, 1);
+            const attack = DataManager.getNumber(enemy.attack, 0);
+            const defense = DataManager.getNumber(enemy.defense, 0);
+            const exp = DataManager.getNumber(enemy.exp, 0);
+            const gold = DataManager.getNumber(enemy.gold, 0);
+            const healthPercent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
+            
+            elements.infoPanelTitle.textContent = '敵人資訊';
+            elements.infoPanelContent.innerHTML = `
+                <div class="enemy-name-display">${enemy.name}${enemy.isBoss ? ' [BOSS]' : ''}</div>
+                <div class="enemy-health-bar">
+                    <div class="enemy-health-fill" style="width: ${healthPercent}%"></div>
+                </div>
+                <p class="enemy-health-text">${health}/${maxHealth}</p>
+                <div class="enemy-details">
+                    <p><strong>攻擊力:</strong> ${attack}</p>
+                    <p><strong>防禦力:</strong> ${defense}</p>
+                    <p><strong>經驗值:</strong> ${exp}</p>
+                    <p><strong>金幣:</strong> ${gold}</p>
+                </div>
+            `;
+            break;
+            
+        case 'shop':
+            elements.infoPanelTitle.textContent = '商店';
+            let shopHTML = '<div class="shop-items-list">';
+            gameState.shop.forEach((item, index) => {
+                const canAfford = DataManager.getNumber(gameState.player.gold, 0) >= DataManager.getNumber(item.cost, 0);
+                const isOutOfStock = item.stock === 0;
+                shopHTML += `
+                    <div class="shop-item">
+                        <h4>${item.name}</h4>
+                        <p>${item.description}</p>
+                        <p><strong>價格: ${item.cost} 金幣</strong></p>
+                        <button class="btn btn-shop" ${!canAfford || isOutOfStock ? 'disabled' : ''} onclick="buyItem(${index})">
+                            ${isOutOfStock ? '已售完' : !canAfford ? '金幣不足' : '購買'}
+                        </button>
+                    </div>
+                `;
+            });
+            shopHTML += '</div>';
+            elements.infoPanelContent.innerHTML = shopHTML;
+            break;
+            
+        case 'default':
+        default:
+            elements.infoPanelTitle.textContent = '資訊';
+            elements.infoPanelContent.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">選擇行動來查看詳細資訊</p>';
+            break;
+    }
+}
+
+// 更新敵人UI（保留用於戰鬥區域）
 function updateEnemyUI() {
     if (!gameState.currentEnemy) {
-        // 如果沒有敵人，清空顯示
-        if (elements.enemyNameDisplay) elements.enemyNameDisplay.textContent = '';
-        if (elements.enemyHealthFill) elements.enemyHealthFill.style.width = '0%';
-        if (elements.enemyHealthText) elements.enemyHealthText.textContent = '';
-        if (elements.enemyDetails) elements.enemyDetails.innerHTML = '';
+        updateInfoPanel('default');
         return;
     }
     
     const enemy = DataManager.initEnemy(gameState.currentEnemy);
-    
-    // 確保所有數值都是有效的數字
-    const health = DataManager.getNumber(enemy.health, 0);
-    const maxHealth = DataManager.getNumber(enemy.maxHealth, 1);
-    const attack = DataManager.getNumber(enemy.attack, 0);
-    const defense = DataManager.getNumber(enemy.defense, 0);
-    const exp = DataManager.getNumber(enemy.exp, 0);
-    const gold = DataManager.getNumber(enemy.gold, 0);
     
     // 更新中央戰鬥區域的敵人名稱和狀態
     if (elements.enemyName) {
@@ -749,29 +798,8 @@ function updateEnemyUI() {
         elements.battleStatus.textContent = `正在與 ${enemy.name} 戰鬥中...`;
     }
     
-    // 更新右側面板的敵人名稱和血條
-    if (elements.enemyNameDisplay) {
-        elements.enemyNameDisplay.textContent = enemy.name + (enemy.isBoss ? ' [BOSS]' : '');
-    }
-    
-    // 更新血條
-    const healthPercent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
-    if (elements.enemyHealthFill) {
-        elements.enemyHealthFill.style.width = healthPercent + '%';
-    }
-    if (elements.enemyHealthText) {
-        elements.enemyHealthText.textContent = `${health}/${maxHealth}`;
-    }
-    
-    // 更新敵人詳細資訊
-    if (elements.enemyDetails) {
-        elements.enemyDetails.innerHTML = `
-            <p><strong>攻擊力:</strong> ${attack}</p>
-            <p><strong>防禦力:</strong> ${defense}</p>
-            <p><strong>經驗值:</strong> ${exp}</p>
-            <p><strong>金幣:</strong> ${gold}</p>
-        `;
-    }
+    // 更新右側資訊面板
+    updateInfoPanel('enemy');
 }
 
 // 計算傷害（包含暴擊）
@@ -1077,28 +1105,7 @@ function openShop() {
         return;
     }
     
-    elements.shopItems.innerHTML = '';
-    
-    gameState.shop.forEach((item, index) => {
-        const shopItem = document.createElement('div');
-        shopItem.className = 'shop-item';
-        
-        const canAfford = gameState.player.gold >= item.cost;
-        const isOutOfStock = item.stock === 0;
-        
-        shopItem.innerHTML = `
-            <h4>${item.name}</h4>
-            <p>${item.description}</p>
-            <p><strong>價格: ${item.cost} 金幣</strong></p>
-            <button ${!canAfford || isOutOfStock ? 'disabled' : ''} onclick="buyItem(${index})">
-                ${isOutOfStock ? '已售完' : !canAfford ? '金幣不足' : '購買'}
-            </button>
-        `;
-        
-        elements.shopItems.appendChild(shopItem);
-    });
-    
-    elements.shopModal.style.display = 'block';
+    updateInfoPanel('shop');
 }
 
 // 購買物品
@@ -1163,12 +1170,12 @@ function buyItem(index) {
     }
     
     updateUI();
-    openShop(); // 刷新商店
+    updateInfoPanel('shop'); // 刷新商店
 }
 
-// 關閉商店
+// 關閉商店（現在不需要，因為商店顯示在右側面板）
 function closeShop() {
-    elements.shopModal.style.display = 'none';
+    updateInfoPanel('default');
 }
 
 // 事件監聽器
@@ -1200,12 +1207,6 @@ if (elements.trainMeditationBtn) {
     elements.trainMeditationBtn.addEventListener('click', () => TrainingSystem.performTraining('meditation'));
 }
 
-// 點擊模態框外部關閉
-window.addEventListener('click', (e) => {
-    if (e.target === elements.shopModal) {
-        closeShop();
-    }
-});
 
 // 初始化遊戲
 initGame();

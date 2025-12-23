@@ -1144,24 +1144,92 @@ function updateInfoPanel(type, data = {}) {
             break;
             
         case 'action':
-            elements.infoPanelTitle.textContent = '城鎮行動';
+            elements.infoPanelTitle.textContent = '🏘️ 城鎮行動';
+            const player = gameState.player;
+            const playerLevel = DataManager.getNumber(player.level, 1);
+            const playerGold = DataManager.getNumber(player.gold, 0);
+            const playerEnergy = DataManager.getNumber(player.energy, 100);
+            const playerMaxEnergy = DataManager.getNumber(player.maxEnergy, 100);
+            
             elements.infoPanelContent.innerHTML = `
                 <div style="color: #666; line-height: 1.6;">
-                    <p style="margin-bottom: 15px;"><strong>可執行的行動：</strong></p>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-                            <strong>查看公告欄</strong> - 了解最新的冒險資訊
-                        </li>
-                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-                            <strong>打聽情報</strong> - 獲得關於附近地區的資訊
-                        </li>
-                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-                            <strong>查看排行榜</strong> - 查看你的冒險統計
-                        </li>
-                    </ul>
-                    <button class="btn btn-action-view" onclick="viewTownAction()" style="width: 100%; padding: 12px; margin-top: 15px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        執行行動
-                    </button>
+                    <p style="margin-bottom: 15px; font-size: 1.05em;">🏘️ 歡迎來到城鎮行動中心！這裡提供各種有用的服務。</p>
+                    
+                    <div style="display: grid; gap: 10px; margin-top: 15px;">
+                        <!-- 查看公告欄 -->
+                        <div style="background: #fff; border: 1px solid #4caf50; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('bulletin')" onmouseover="this.style.background='#f0f8f0'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">📋</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">查看公告欄</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">了解最新的冒險資訊和懸賞任務</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 5 體力</p>
+                        </div>
+                        
+                        <!-- 打聽情報 -->
+                        <div style="background: #fff; border: 1px solid #2196f3; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('gossip')" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">💬</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">打聽情報</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">向居民打聽附近地區的情報</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 5 體力</p>
+                        </div>
+                        
+                        <!-- 查看排行榜 -->
+                        <div style="background: #fff; border: 1px solid #ff9800; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('ranking')" onmouseover="this.style.background='#fff8f0'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">🏆</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">查看排行榜</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">查看自己的冒險統計和排名</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 5 體力</p>
+                        </div>
+                        
+                        <!-- 幫助村民 -->
+                        <div style="background: #fff; border: 1px solid #9c27b0; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('help')" onmouseover="this.style.background='#faf0ff'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">🤝</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">幫助村民</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">幫助村民完成任務，獲得獎勵</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 15 體力 | 💰 獎勵: 金幣+經驗</p>
+                        </div>
+                        
+                        <!-- 參加競技場 -->
+                        <div style="background: #fff; border: 1px solid #f44336; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('arena')" onmouseover="this.style.background='#fff0f0'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">⚔️</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">參加競技場</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">參加競技場挑戰，獲得豐厚獎勵</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 20 體力 | 💰 獎勵: 大量金幣+經驗</p>
+                        </div>
+                        
+                        <!-- 尋找寶藏 -->
+                        <div style="background: #fff; border: 1px solid #ffc107; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('treasure')" onmouseover="this.style.background='#fffef0'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">💎</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">尋找寶藏</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">在城鎮中尋找隱藏的寶藏</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 10 體力 | 💰 隨機獎勵</p>
+                        </div>
+                        
+                        <!-- 拜訪鐵匠 -->
+                        <div style="background: #fff; border: 1px solid #607d8b; border-radius: 6px; padding: 12px; cursor: pointer;" onclick="executeTownAction('blacksmith')" onmouseover="this.style.background='#f0f4f7'" onmouseout="this.style.background='#fff'">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <span style="font-size: 1.5em;">🔨</span>
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">拜訪鐵匠</h4>
+                            </div>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">向鐵匠學習，獲得屬性提升</p>
+                            <p style="margin: 5px 0 0 0; color: #888; font-size: 0.8em;">⚡ 消耗: 15 體力 | 💰 費用: 30金幣</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 3px solid #ffc107;">
+                        <p style="margin: 0; font-size: 0.85em; color: #856404;">💡 提示：點擊上方行動卡片即可執行對應行動</p>
+                    </div>
                 </div>
             `;
             break;

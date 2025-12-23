@@ -1925,6 +1925,373 @@ function executeTownAction(actionType) {
     updateInfoPanel('action');
 }
 
+// 打開鐵匠鋪
+function openBlacksmith() {
+    updateInfoPanel('blacksmith');
+}
+
+// 更新鐵匠鋪面板
+function updateBlacksmithPanel() {
+    elements.infoPanelTitle.textContent = '🔨 鐵匠鋪';
+    const player = gameState.player;
+    const playerLevel = DataManager.getNumber(player.level, 1);
+    const playerGold = DataManager.getNumber(player.gold, 0);
+    
+    let html = `
+        <div style="color: #666; line-height: 1.6;">
+            <p style="margin-bottom: 15px; font-size: 1.05em;">🔨 歡迎來到鐵匠鋪！這裡可以打造、修復和販賣裝備。</p>
+            
+            <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #607d8b;">
+                <p style="margin: 5px 0; font-size: 0.95em;"><strong>💰 當前金幣:</strong> ${playerGold}</p>
+                <p style="margin: 5px 0; font-size: 0.95em;"><strong>📦 背包空間:</strong> ${(player.inventory || []).length}/20</p>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <button onclick="showBlacksmithTab('craft')" id="blacksmithTabCraft" style="flex: 1; padding: 10px; background: #607d8b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">打造裝備</button>
+                <button onclick="showBlacksmithTab('repair')" id="blacksmithTabRepair" style="flex: 1; padding: 10px; background: #9e9e9e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">修復裝備</button>
+                <button onclick="showBlacksmithTab('sell')" id="blacksmithTabSell" style="flex: 1; padding: 10px; background: #9e9e9e; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">販賣裝備</button>
+            </div>
+            
+            <div id="blacksmithContent">
+                ${getBlacksmithCraftContent()}
+            </div>
+        </div>
+    `;
+    
+    elements.infoPanelContent.innerHTML = html;
+}
+
+// 切換鐵匠鋪標籤
+function showBlacksmithTab(tab) {
+    // 更新按鈕樣式
+    const craftBtn = document.getElementById('blacksmithTabCraft');
+    const repairBtn = document.getElementById('blacksmithTabRepair');
+    const sellBtn = document.getElementById('blacksmithTabSell');
+    
+    if (craftBtn) craftBtn.style.background = tab === 'craft' ? '#607d8b' : '#9e9e9e';
+    if (repairBtn) repairBtn.style.background = tab === 'repair' ? '#607d8b' : '#9e9e9e';
+    if (sellBtn) sellBtn.style.background = tab === 'sell' ? '#607d8b' : '#9e9e9e';
+    
+    // 更新內容
+    const content = document.getElementById('blacksmithContent');
+    if (content) {
+        switch(tab) {
+            case 'craft':
+                content.innerHTML = getBlacksmithCraftContent();
+                break;
+            case 'repair':
+                content.innerHTML = getBlacksmithRepairContent();
+                break;
+            case 'sell':
+                content.innerHTML = getBlacksmithSellContent();
+                break;
+        }
+    }
+}
+
+// 獲取打造裝備內容
+function getBlacksmithCraftContent() {
+    const player = gameState.player;
+    const playerLevel = DataManager.getNumber(player.level, 1);
+    const playerGold = DataManager.getNumber(player.gold, 0);
+    
+    if (!gameState.equipmentTemplates || gameState.equipmentTemplates.length === 0) {
+        return '<p style="color: #888; text-align: center; padding: 20px;">暫無可打造的裝備</p>';
+    }
+    
+    let html = '<div style="max-height: 400px; overflow-y: auto;">';
+    html += '<p style="margin-bottom: 10px; font-weight: 600;">可打造的裝備：</p>';
+    
+    // 按類型分組
+    const types = ['weapon', 'armor', 'accessory'];
+    types.forEach(type => {
+        const typeName = type === 'weapon' ? '武器' : type === 'armor' ? '防具' : '飾品';
+        const templates = gameState.equipmentTemplates.filter(eq => eq.type === type);
+        
+        if (templates.length > 0) {
+            html += `<h4 style="margin: 15px 0 8px 0; color: #333; font-size: 1em;">${typeName}</h4>`;
+            
+            templates.forEach(template => {
+                const canCraft = playerLevel >= template.level && playerGold >= template.cost;
+                const rarityColors = {
+                    'common': '#9e9e9e',
+                    'uncommon': '#4caf50',
+                    'rare': '#2196f3',
+                    'epic': '#9c27b0',
+                    'legendary': '#ff9800'
+                };
+                const rarityColor = rarityColors[template.rarity] || '#9e9e9e';
+                
+                html += `
+                    <div style="background: ${canCraft ? '#fff' : '#f5f5f5'}; border: 1px solid ${rarityColor}; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <span style="font-size: 1.5em;">${template.icon || '📦'}</span>
+                            <div style="flex: 1;">
+                                <h4 style="margin: 0; color: #333; font-size: 1em;">${template.name}</h4>
+                                <p style="margin: 3px 0 0 0; color: #888; font-size: 0.8em;">等級需求: ${template.level} | 稀有度: ${template.rarity}</p>
+                            </div>
+                        </div>
+                        <div style="margin: 8px 0; font-size: 0.85em; color: #666;">
+                            ${template.attack ? `<span>⚔️ 攻擊: +${template.attack}</span>` : ''}
+                            ${template.defense ? `<span>🛡️ 防禦: +${template.defense}</span>` : ''}
+                            ${template.critChance ? `<span>💥 暴擊: +${(template.critChance * 100).toFixed(0)}%</span>` : ''}
+                            ${template.dodgeChance ? `<span>🌀 閃避: +${(template.dodgeChance * 100).toFixed(0)}%</span>` : ''}
+                            <span>💎 耐久: ${template.durability}/${template.maxDurability}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <span style="font-weight: 600; color: #ff9800;">💰 ${template.cost} 金幣</span>
+                            <button onclick="craftEquipment('${template.id}')" ${!canCraft ? 'disabled' : ''} style="padding: 6px 12px; background: ${canCraft ? '#4caf50' : '#ccc'}; color: white; border: none; border-radius: 4px; cursor: ${canCraft ? 'pointer' : 'not-allowed'}; font-size: 0.85em;">
+                                ${playerLevel < template.level ? '等級不足' : playerGold < template.cost ? '💰不足' : '打造'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+// 獲取修復裝備內容
+function getBlacksmithRepairContent() {
+    const player = gameState.player;
+    const playerGold = DataManager.getNumber(player.gold, 0);
+    
+    let html = '<div style="max-height: 400px; overflow-y: auto;">';
+    html += '<p style="margin-bottom: 10px; font-weight: 600;">可修復的裝備：</p>';
+    
+    // 檢查已裝備的裝備
+    const equippedItems = [
+        { slot: 'weapon', item: player.equipment?.weapon },
+        { slot: 'armor', item: player.equipment?.armor },
+        { slot: 'accessory', item: player.equipment?.accessory }
+    ].filter(eq => eq.item && eq.item.durability < eq.item.maxDurability);
+    
+    // 檢查背包中的裝備
+    const inventoryItems = (player.inventory || []).filter(item => item.durability < item.maxDurability);
+    
+    const allItems = [...equippedItems.map(eq => ({ ...eq.item, slot: eq.slot, isEquipped: true })), ...inventoryItems.map((item, index) => ({ ...item, inventoryIndex: index, isEquipped: false }))];
+    
+    if (allItems.length === 0) {
+        html += '<p style="color: #888; text-align: center; padding: 20px;">沒有需要修復的裝備</p>';
+    } else {
+        allItems.forEach((item, index) => {
+            const durabilityPercent = (item.durability / item.maxDurability) * 100;
+            const repairCost = Math.floor((item.maxDurability - item.durability) * 0.5);
+            const canRepair = playerGold >= repairCost;
+            
+            html += `
+                <div style="background: #fff; border: 1px solid #607d8b; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 1.5em;">${item.icon || '📦'}</span>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; color: #333; font-size: 1em;">${item.name} ${item.isEquipped ? '(已裝備)' : ''}</h4>
+                            <div style="margin-top: 5px;">
+                                <div style="width: 100%; height: 20px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${durabilityPercent}%; height: 100%; background: ${durabilityPercent > 50 ? '#4caf50' : durabilityPercent > 20 ? '#ff9800' : '#f44336'}; transition: width 0.3s;"></div>
+                                </div>
+                                <span style="font-size: 0.8em; color: #666;">耐久: ${item.durability}/${item.maxDurability}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span style="font-weight: 600; color: #ff9800;">💰 修復費用: ${repairCost} 金幣</span>
+                        <button onclick="repairEquipment(${item.isEquipped ? `'${item.slot}'` : (item.inventoryIndex !== undefined ? item.inventoryIndex : index) + ',true'})" ${!canRepair ? 'disabled' : ''} style="padding: 6px 12px; background: ${canRepair ? '#2196f3' : '#ccc'}; color: white; border: none; border-radius: 4px; cursor: ${canRepair ? 'pointer' : 'not-allowed'}; font-size: 0.85em;">
+                            ${!canRepair ? '💰不足' : '修復'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 獲取販賣裝備內容
+function getBlacksmithSellContent() {
+    const player = gameState.player;
+    
+    let html = '<div style="max-height: 400px; overflow-y: auto;">';
+    html += '<p style="margin-bottom: 10px; font-weight: 600;">可販賣的裝備：</p>';
+    
+    // 檢查已裝備的裝備
+    const equippedItems = [
+        { slot: 'weapon', item: player.equipment?.weapon },
+        { slot: 'armor', item: player.equipment?.armor },
+        { slot: 'accessory', item: player.equipment?.accessory }
+    ].filter(eq => eq.item);
+    
+    // 檢查背包中的裝備
+    const inventoryItems = player.inventory || [];
+    
+    const allItems = [
+        ...equippedItems.map(eq => ({ ...eq.item, slot: eq.slot, isEquipped: true })),
+        ...inventoryItems.map((item, index) => ({ ...item, inventoryIndex: index, isEquipped: false }))
+    ];
+    
+    if (allItems.length === 0) {
+        html += '<p style="color: #888; text-align: center; padding: 20px;">沒有可販賣的裝備</p>';
+    } else {
+        allItems.forEach((item) => {
+            const sellPrice = Math.floor((item.cost || 0) * 0.5 * (item.durability / item.maxDurability));
+            
+            html += `
+                <div style="background: #fff; border: 1px solid #ff9800; border-radius: 6px; padding: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 1.5em;">${item.icon || '📦'}</span>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; color: #333; font-size: 1em;">${item.name} ${item.isEquipped ? '(已裝備)' : ''}</h4>
+                            <p style="margin: 3px 0 0 0; color: #888; font-size: 0.8em;">耐久: ${item.durability}/${item.maxDurability}</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span style="font-weight: 600; color: #4caf50;">💰 販賣價格: ${sellPrice} 金幣</span>
+                        <button onclick="sellEquipment(${item.isEquipped ? `'${item.slot}'` : (item.inventoryIndex !== undefined ? item.inventoryIndex : 0) + ',true'})" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                            販賣
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// 打造裝備
+function craftEquipment(templateId) {
+    const template = gameState.equipmentTemplates?.find(t => t.id === templateId);
+    if (!template) {
+        addLog('錯誤：找不到裝備模板！');
+        return;
+    }
+    
+    const player = gameState.player;
+    const playerLevel = DataManager.getNumber(player.level, 1);
+    const playerGold = DataManager.getNumber(player.gold, 0);
+    
+    if (playerLevel < template.level) {
+        addLog(`等級不足！需要 ${template.level} 級，你只有 ${playerLevel} 級。`);
+        return;
+    }
+    
+    if (playerGold < template.cost) {
+        addLog(`💰 金幣不足！需要 ${template.cost} 金幣，你只有 ${playerGold} 金幣。`);
+        return;
+    }
+    
+    if ((player.inventory || []).length >= 20) {
+        addLog('📦 背包已滿！無法打造新裝備。');
+        return;
+    }
+    
+    // 創建新裝備（複製模板）
+    const newEquipment = {
+        ...template,
+        id: templateId + '_' + Date.now(), // 唯一ID
+        durability: template.maxDurability
+    };
+    
+    // 扣除金幣
+    player.gold = playerGold - template.cost;
+    
+    // 添加到背包
+    if (!player.inventory) {
+        player.inventory = [];
+    }
+    player.inventory.push(newEquipment);
+    
+    addLog(`🔨 成功打造了 ${template.icon || '📦'} ${template.name}！`);
+    addLog(`💰 花費了 ${template.cost} 金幣。`);
+    
+    updateUI();
+    updateBlacksmithPanel();
+}
+
+// 修復裝備
+function repairEquipment(slotOrIndex, isInventory = false) {
+    const player = gameState.player;
+    const playerGold = DataManager.getNumber(player.gold, 0);
+    
+    let item;
+    if (isInventory) {
+        item = (player.inventory || [])[slotOrIndex];
+    } else {
+        item = (player.equipment || {})[slotOrIndex];
+    }
+    
+    if (!item) {
+        addLog('錯誤：找不到裝備！');
+        return;
+    }
+    
+    if (item.durability >= item.maxDurability) {
+        addLog('這件裝備不需要修復！');
+        return;
+    }
+    
+    const repairCost = Math.floor((item.maxDurability - item.durability) * 0.5);
+    
+    if (playerGold < repairCost) {
+        addLog(`💰 金幣不足！需要 ${repairCost} 金幣，你只有 ${playerGold} 金幣。`);
+        return;
+    }
+    
+    // 扣除金幣
+    player.gold = playerGold - repairCost;
+    
+    // 恢復耐久度
+    item.durability = item.maxDurability;
+    
+    addLog(`🔧 成功修復了 ${item.icon || '📦'} ${item.name}！`);
+    addLog(`💰 花費了 ${repairCost} 金幣。`);
+    
+    updateUI();
+    updateBlacksmithPanel();
+}
+
+// 販賣裝備
+function sellEquipment(slotOrIndex, isInventory = false) {
+    const player = gameState.player;
+    
+    let item;
+    if (isInventory) {
+        item = (player.inventory || [])[slotOrIndex];
+        if (!item) {
+            addLog('錯誤：找不到裝備！');
+            return;
+        }
+        // 從背包移除
+        player.inventory.splice(slotOrIndex, 1);
+    } else {
+        item = (player.equipment || {})[slotOrIndex];
+        if (!item) {
+            addLog('錯誤：找不到裝備！');
+            return;
+        }
+        // 從裝備欄移除
+        if (!player.equipment) {
+            player.equipment = { weapon: null, armor: null, accessory: null };
+        }
+        player.equipment[slotOrIndex] = null;
+    }
+    
+    const sellPrice = Math.floor((item.cost || 0) * 0.5 * (item.durability / item.maxDurability));
+    
+    // 增加金幣
+    player.gold = DataManager.getNumber(player.gold, 0) + sellPrice;
+    
+    addLog(`💰 成功販賣了 ${item.icon || '📦'} ${item.name}，獲得 ${sellPrice} 金幣！`);
+    
+    updateUI();
+    updateBlacksmithPanel();
+}
+
 // 城鎮行動（保留舊函數以兼容）
 function viewTownAction() {
     // 直接顯示行動面板，不消耗體力

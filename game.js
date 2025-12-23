@@ -239,12 +239,20 @@ function initGame() {
         gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
     }
     
+    // 強制設置 isTown 屬性
+    gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
+    
     updateUI();
     updateInfoPanel('default'); // 初始化右側資訊面板
-    updateActionButtons(); // 確保按鈕狀態正確
+    
+    // 強制更新按鈕顯示（使用 setTimeout 確保 DOM 已準備好）
+    setTimeout(() => {
+        updateActionButtons();
+    }, 100);
+    
     addLog('遊戲開始！歡迎來到文字RPG世界！');
     addLog('在起始村莊中，你可以進行訓練來提升能力。');
-    addLog('離開城鎮後，就可以探索和戰鬥了！');
+    addLog('使用城鎮按鈕：商店、行動、旅館、NPC');
     checkQuests();
     checkAchievements();
 }

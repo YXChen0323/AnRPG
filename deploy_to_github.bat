@@ -29,18 +29,18 @@ if %errorlevel% equ 0 (
     git diff --quiet
     if %errorlevel% equ 0 (
         echo No changes to commit. All files are up to date.
-    ) else (
-        echo [3/5] Creating commit...
-        git commit -m "Update: Text RPG Game"
-    )
-) else (
-    REM 創建提交
-    echo [3/5] Creating commit...
-    git commit -m "Update: Text RPG Game"
-    if %errorlevel% neq 0 (
-        echo Warning: Failed to create commit, but continuing...
+        goto :skip_commit
     )
 )
+
+REM 創建提交
+echo [3/5] Creating commit...
+git commit -m "Update: Text RPG Game - %date% %time%"
+if %errorlevel% neq 0 (
+    echo Warning: No changes to commit or commit failed, continuing...
+)
+
+:skip_commit
 
 REM 設置主分支
 echo [4/5] 設置主分支...

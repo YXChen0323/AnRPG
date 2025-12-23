@@ -467,17 +467,59 @@ function updateUI() {
     const healthPercent = Math.max(0, Math.min(100, (health / maxHealth) * 100));
     if (elements.healthFill) {
         elements.healthFill.style.width = healthPercent + '%';
+        // 根據生命值百分比改變顏色
+        if (healthPercent > 60) {
+            elements.healthFill.style.background = '#4caf50';
+        } else if (healthPercent > 30) {
+            elements.healthFill.style.background = '#ff9800';
+        } else {
+            elements.healthFill.style.background = '#f44336';
+        }
     }
     if (elements.healthText) {
         elements.healthText.textContent = `${health}/${maxHealth}`;
     }
     
-    // 更新其他狀態
+    // 更新等級
     if (elements.level) elements.level.textContent = level;
-    if (elements.exp) elements.exp.textContent = `${exp}/${expToNext}`;
+    
+    // 更新經驗值（帶進度條）
+    if (elements.exp) {
+        elements.exp.textContent = `${exp}/${expToNext}`;
+    }
+    if (elements.expFill) {
+        const expPercent = Math.max(0, Math.min(100, (exp / expToNext) * 100));
+        elements.expFill.style.width = expPercent + '%';
+    }
+    
+    // 更新戰鬥屬性
     if (elements.attack) elements.attack.textContent = attack;
     if (elements.defense) elements.defense.textContent = defense;
-    if (elements.gold) elements.gold.textContent = gold;
+    
+    const critChance = DataManager.getNumber(player.critChance, 0.1);
+    const dodgeChance = DataManager.getNumber(player.dodgeChance, 0.05);
+    if (elements.critChance) {
+        elements.critChance.textContent = Math.floor(critChance * 100) + '%';
+    }
+    if (elements.dodgeChance) {
+        elements.dodgeChance.textContent = Math.floor(dodgeChance * 100) + '%';
+    }
+    
+    // 更新資源
+    if (elements.gold) elements.gold.textContent = gold.toLocaleString();
+    
+    const expMultiplier = DataManager.getNumber(player.expMultiplier, 1.0);
+    if (elements.expMultiplier) {
+        elements.expMultiplier.textContent = expMultiplier.toFixed(1) + 'x';
+    }
+    
+    // 更新戰鬥統計
+    const kills = DataManager.getNumber(player.kills, 0);
+    const bossKills = DataManager.getNumber(player.bossKills, 0);
+    const totalGold = DataManager.getNumber(player.totalGold, 0);
+    if (elements.kills) elements.kills.textContent = kills;
+    if (elements.bossKills) elements.bossKills.textContent = bossKills;
+    if (elements.totalGold) elements.totalGold.textContent = totalGold.toLocaleString();
     
     // 更新位置資訊
     if (elements.locationName) {

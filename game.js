@@ -229,18 +229,18 @@ function initGame() {
     const startingLocation = gameState.locations.find(loc => loc.name === '起始村莊');
     if (startingLocation) {
         gameState.currentLocation = { ...startingLocation };
+        // 強制設置 isTown 為 true
+        gameState.currentLocation.isTown = true;
     } else {
         // 如果找不到，使用第一個地點
         gameState.currentLocation = { ...gameState.locations[0] };
+        gameState.currentLocation.isTown = (gameState.currentLocation.name === '起始村莊');
     }
     
-    // 確保 isTown 屬性正確設置
-    if (!gameState.currentLocation.hasOwnProperty('isTown')) {
-        gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
+    // 強制設置 isTown 屬性（確保是 true）
+    if (gameState.currentLocation.name === '起始村莊') {
+        gameState.currentLocation.isTown = true;
     }
-    
-    // 強制設置 isTown 屬性
-    gameState.currentLocation.isTown = (gameState.currentLocation.name === '起始村莊');
     
     // 確保 locations 數組中的起始村莊也有 isTown 屬性
     const startingLocInArray = gameState.locations.find(loc => loc.name === '起始村莊');
@@ -478,13 +478,11 @@ function updateUI() {
 // 更新行動按鈕顯示
 function updateActionButtons() {
     const location = gameState.currentLocation;
-    // 確保 isTown 屬性正確判斷（強制檢查）
-    const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
+    // 強制檢查並設置 isTown 屬性
+    const isTown = (location.name === '起始村莊');
+    location.isTown = isTown; // 強制設置
     
-    // 強制設置 isTown 屬性
-    if (location) {
-        location.isTown = (location.name === '起始村莊');
-    }
+    console.log('updateActionButtons - location:', location.name, 'isTown:', isTown);
     
     // 在城鎮中隱藏探索按鈕和一般行動按鈕，顯示城鎮專用按鈕
     if (elements.exploreBtn) {

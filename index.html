@@ -17,32 +17,85 @@
             <div class="panel player-panel">
                 <h2>角色狀態</h2>
                 <div class="player-info">
-                    <div class="stat-item">
-                        <span class="stat-label">生命值:</span>
-                        <div class="health-bar">
-                            <div class="health-fill" id="healthFill"></div>
+                    <!-- 基本信息 -->
+                    <div class="stat-section">
+                        <h3 class="stat-section-title">基本信息</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">等級:</span>
+                            <span class="stat-value" id="level">1</span>
                         </div>
-                        <span class="stat-value" id="healthText">100/100</span>
+                        <div class="stat-item">
+                            <span class="stat-label">經驗值:</span>
+                            <div class="exp-bar-container">
+                                <div class="exp-bar">
+                                    <div class="exp-fill" id="expFill"></div>
+                                </div>
+                                <span class="stat-value" id="exp">0/100</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">等級:</span>
-                        <span class="stat-value" id="level">1</span>
+                    
+                    <!-- 生命值 -->
+                    <div class="stat-section">
+                        <h3 class="stat-section-title">生命值</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">生命值:</span>
+                            <div class="health-bar">
+                                <div class="health-fill" id="healthFill"></div>
+                            </div>
+                            <span class="stat-value" id="healthText">100/100</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">經驗值:</span>
-                        <span class="stat-value" id="exp">0/100</span>
+                    
+                    <!-- 戰鬥屬性 -->
+                    <div class="stat-section">
+                        <h3 class="stat-section-title">戰鬥屬性</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">⚔️ 攻擊力:</span>
+                            <span class="stat-value" id="attack">10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🛡️ 防禦力:</span>
+                            <span class="stat-value" id="defense">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">💥 暴擊率:</span>
+                            <span class="stat-value" id="critChance">10%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">🌀 閃避率:</span>
+                            <span class="stat-value" id="dodgeChance">5%</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">攻擊力:</span>
-                        <span class="stat-value" id="attack">10</span>
+                    
+                    <!-- 資源 -->
+                    <div class="stat-section">
+                        <h3 class="stat-section-title">資源</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">💰 金幣:</span>
+                            <span class="stat-value" id="gold">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">📚 經驗倍率:</span>
+                            <span class="stat-value" id="expMultiplier">1.0x</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">防禦力:</span>
-                        <span class="stat-value" id="defense">5</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">金幣:</span>
-                        <span class="stat-value" id="gold">0</span>
+                    
+                    <!-- 戰鬥統計 -->
+                    <div class="stat-section">
+                        <h3 class="stat-section-title">戰鬥統計</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">擊殺數:</span>
+                            <span class="stat-value" id="kills">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Boss擊殺:</span>
+                            <span class="stat-value" id="bossKills">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">總獲得金幣:</span>
+                            <span class="stat-value" id="totalGold">0</span>
+                        </div>
                     </div>
                 </div>
             </div>

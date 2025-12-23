@@ -87,7 +87,24 @@ header h1 {
 .player-info {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
+}
+
+.stat-section {
+    padding: 10px;
+    background: #fafafa;
+    border-radius: 6px;
+    border-left: 3px solid #4caf50;
+    margin-bottom: 8px;
+}
+
+.stat-section-title {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .stat-item {

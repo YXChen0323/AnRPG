@@ -48,20 +48,25 @@ header h1 {
 
 .game-layout {
     display: grid;
-    grid-template-columns: 300px 1fr 300px;
-    gap: 15px;
-    margin-bottom: 15px;
+    grid-template-columns: 280px 1fr 320px;
+    gap: 12px;
+    margin-bottom: 12px;
+    height: calc(100vh - 100px);
+    min-height: 600px;
 }
 
 .panel {
     background: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 12px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
     overflow-y: auto;
-    max-height: calc(100vh - 150px);
+    overflow-x: hidden;
+    height: 100%;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .panel h2 {
@@ -135,18 +140,21 @@ header h1 {
 .main-panel {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     overflow-y: auto;
-    max-height: calc(100vh - 150px);
+    overflow-x: hidden;
+    height: 100%;
     box-sizing: border-box;
+    flex: 1;
 }
 
 .location-info {
     background: #fafafa;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 12px;
+    border-radius: 6px;
     border: 1px solid #e0e0e0;
     border-left: 4px solid #666;
+    flex-shrink: 0;
 }
 
 .location-info h2 {
@@ -240,15 +248,16 @@ header h1 {
 
 .log-area {
     background: #fafafa;
-    padding: 12px;
-    border-radius: 8px;
-    min-height: 150px;
-    max-height: 250px;
+    padding: 10px;
+    border-radius: 6px;
+    min-height: 120px;
+    max-height: 200px;
     overflow-y: auto;
     overflow-x: hidden;
     border: 1px solid #e0e0e0;
     box-sizing: border-box;
     flex-shrink: 0;
+    font-size: 0.9em;
 }
 
 .log-entry {
@@ -265,16 +274,18 @@ header h1 {
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .town-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
-    margin-top: 15px;
+    flex-shrink: 0;
+    margin-top: 0;
 }
 
 .btn-shop-town,

@@ -28,6 +28,8 @@ const DataManager = {
         this.setNumber(player, 'expToNext', player.expToNext, 100);
         this.setNumber(player, 'health', player.health, 100);
         this.setNumber(player, 'maxHealth', player.maxHealth, 100);
+        this.setNumber(player, 'energy', player.energy, player.maxEnergy || 100);
+        this.setNumber(player, 'maxEnergy', player.maxEnergy, 100);
         this.setNumber(player, 'attack', player.attack, 10);
         this.setNumber(player, 'defense', player.defense, 5);
         this.setNumber(player, 'gold', player.gold, 0);
@@ -88,6 +90,8 @@ const gameState = {
         expToNext: 100,
         health: 100,
         maxHealth: 100,
+        energy: 100,           // 體力
+        maxEnergy: 100,        // 最大體力
         attack: 10,
         defense: 5,
         gold: 0,
@@ -189,6 +193,8 @@ const gameState = {
 const elements = {
     healthFill: document.getElementById('healthFill'),
     healthText: document.getElementById('healthText'),
+    energyFill: document.getElementById('energyFill'),
+    energyText: document.getElementById('energyText'),
     level: document.getElementById('level'),
     exp: document.getElementById('exp'),
     expFill: document.getElementById('expFill'),
@@ -338,6 +344,11 @@ const TrainingSystem = {
         // 檢查是否在城鎮
         if (!location.isTown) {
             addLog('只有在城鎮中才能進行訓練！');
+            return;
+        }
+        
+        // 檢查體力
+        if (!consumeEnergy(20, '訓練')) {
             return;
         }
         
@@ -513,6 +524,25 @@ function updateUI() {
         elements.expMultiplier.textContent = expMultiplier.toFixed(1) + 'x';
     }
     
+    // 更新體力
+    const energy = DataManager.getNumber(player.energy, 100);
+    const maxEnergy = DataManager.getNumber(player.maxEnergy, 100);
+    if (elements.energyFill) {
+        const energyPercent = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
+        elements.energyFill.style.width = energyPercent + '%';
+        // 根據體力百分比改變顏色
+        if (energyPercent > 60) {
+            elements.energyFill.style.background = '#2196f3';
+        } else if (energyPercent > 30) {
+            elements.energyFill.style.background = '#ff9800';
+        } else {
+            elements.energyFill.style.background = '#f44336';
+        }
+    }
+    if (elements.energyText) {
+        elements.energyText.textContent = `${energy}/${maxEnergy}`;
+    }
+    
     // 更新戰鬥統計
     const kills = DataManager.getNumber(player.kills, 0);
     const bossKills = DataManager.getNumber(player.bossKills, 0);
@@ -612,10 +642,33 @@ function calculateEnemyStats(baseEnemy, locationLevel) {
     return DataManager.initEnemy(enemy);
 }
 
+// 檢查並消耗體力
+function consumeEnergy(amount, actionName) {
+    const player = gameState.player;
+    const currentEnergy = DataManager.getNumber(player.energy, 100);
+    const energyCost = DataManager.getNumber(amount, 0);
+    
+    if (currentEnergy < energyCost) {
+        addLog(`⚡ 體力不足！需要 ${energyCost} 點體力，你只有 ${currentEnergy} 點體力。`);
+        addLog('💡 提示：可以通過休息或旅館來恢復體力。');
+        return false;
+    }
+    
+    player.energy = Math.max(0, currentEnergy - energyCost);
+    addLog(`⚡ 消耗了 ${energyCost} 點體力（剩餘: ${player.energy}/${player.maxEnergy}）`);
+    updateUI();
+    return true;
+}
+
 // 探索功能
 function explore() {
     if (gameState.currentEnemy) {
         addLog('你正在戰鬥中，無法探索！');
+        return;
+    }
+    
+    // 檢查體力
+    if (!consumeEnergy(15, '探索')) {
         return;
     }
     
@@ -626,6 +679,10 @@ function explore() {
     if (isTown) {
         addLog('在城鎮中不需要探索，這裡很安全。你可以進行訓練來提升能力。');
         addLog('請使用城鎮按鈕：商店、行動、旅館、NPC');
+        // 退還體力
+        const player = gameState.player;
+        player.energy = Math.min(player.maxEnergy, player.energy + 15);
+        updateUI();
         return;
     }
     
@@ -1170,6 +1227,11 @@ function battle() {
         return;
     }
     
+    // 檢查體力
+    if (!consumeEnergy(10, '戰鬥')) {
+        return;
+    }
+    
     const player = gameState.player;
     const enemy = gameState.currentEnemy;
     
@@ -1221,6 +1283,11 @@ function battle() {
 function challengeBoss() {
     if (gameState.currentLocation.type !== 'cave') {
         addLog('只有在惡魔洞穴中才能挑戰Boss！');
+        return;
+    }
+    
+    // 檢查體力
+    if (!consumeEnergy(25, '挑戰Boss')) {
         return;
     }
     
@@ -1318,13 +1385,20 @@ function rest() {
         return;
     }
     
-    const maxHealth = DataManager.getNumber(gameState.player.maxHealth, 100);
-    const currentHealth = DataManager.getNumber(gameState.player.health, 0);
+    const player = gameState.player;
+    const maxHealth = DataManager.getNumber(player.maxHealth, 100);
+    const currentHealth = DataManager.getNumber(player.health, 0);
     const healAmount = DataManager.safeMath(() => Math.floor(maxHealth * 0.3), 30);
     
-    gameState.player.health = Math.min(maxHealth, currentHealth + healAmount);
+    player.health = Math.min(maxHealth, currentHealth + healAmount);
     
-    addLog(`你休息了一會兒，恢復了${healAmount}點生命值。`);
+    // 恢復體力（休息恢復50%體力）
+    const maxEnergy = DataManager.getNumber(player.maxEnergy, 100);
+    const currentEnergy = DataManager.getNumber(player.energy, 0);
+    const energyRestore = DataManager.safeMath(() => Math.floor(maxEnergy * 0.5), 50);
+    player.energy = Math.min(maxEnergy, currentEnergy + energyRestore);
+    
+    addLog(`你休息了一會兒，恢復了${healAmount}點生命值和${energyRestore}點體力。`);
     updateUI();
     
     // 重新啟用按鈕
@@ -1404,8 +1478,26 @@ function stayAtInn(restType = 'luxury') {
     // 恢復生命值
     gameState.player.health = Math.min(currentHealth + healAmount, maxHealth);
     
+    // 恢復體力（根據休息類型恢復不同比例的體力）
+    const maxEnergy = DataManager.getNumber(gameState.player.maxEnergy, 100);
+    const currentEnergy = DataManager.getNumber(gameState.player.energy, 0);
+    let energyRestore = 0;
+    switch(restType) {
+        case 'basic':
+            energyRestore = Math.floor(maxEnergy * 0.3);
+            break;
+        case 'good':
+            energyRestore = Math.floor(maxEnergy * 0.6);
+            break;
+        case 'luxury':
+        default:
+            energyRestore = maxEnergy; // 完全恢復
+            break;
+    }
+    gameState.player.energy = Math.min(maxEnergy, currentEnergy + energyRestore);
+    
     // 顯示結果
-    addLog(`🏨 ${restDescription}，恢復了${healAmount}點生命值！`);
+    addLog(`🏨 ${restDescription}，恢復了${healAmount}點生命值和${energyRestore}點體力！`);
     addLog(`💰 花費了 ${restCost} 金幣。剩餘金幣: ${gameState.player.gold}`);
     
     if (restType === 'luxury' && gameState.player.health >= maxHealth) {

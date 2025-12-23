@@ -1332,8 +1332,8 @@ function rest() {
     elements.bossBtn.disabled = false;
 }
 
-// 旅館住宿（完全恢復生命值）
-function stayAtInn() {
+// 旅館住宿
+function stayAtInn(restType = 'luxury') {
     if (gameState.currentEnemy) {
         addLog('戰鬥中無法住宿！');
         return;
@@ -1349,6 +1349,7 @@ function stayAtInn() {
     
     const maxHealth = DataManager.getNumber(gameState.player.maxHealth, 100);
     const currentHealth = DataManager.getNumber(gameState.player.health, 0);
+    const currentGold = DataManager.getNumber(gameState.player.gold, 0);
     
     if (currentHealth >= maxHealth) {
         addLog('你的生命值已經滿了，不需要住宿。');
@@ -1356,10 +1357,61 @@ function stayAtInn() {
         return;
     }
     
-    const healAmount = maxHealth - currentHealth;
-    gameState.player.health = maxHealth;
+    // 根據休息類型計算價格和恢復量
+    let restCost = 0;
+    let healPercent = 0;
+    let restName = '';
+    let restDescription = '';
     
-    addLog(`你在旅館中好好休息了一晚，完全恢復了生命值！恢復了${healAmount}點生命值。`);
+    switch(restType) {
+        case 'basic':
+            restCost = 10;
+            healPercent = 0.3;
+            restName = '基礎休息';
+            restDescription = '你在旅館的普通房間休息了一晚';
+            break;
+        case 'good':
+            restCost = 25;
+            healPercent = 0.6;
+            restName = '良好休息';
+            restDescription = '你在旅館的舒適房間好好休息了一晚';
+            break;
+        case 'luxury':
+        default:
+            restCost = 50;
+            healPercent = 1.0;
+            restName = '豪華休息';
+            restDescription = '你在旅館的豪華套房中享受了完美的休息';
+            break;
+    }
+    
+    // 檢查金幣
+    if (currentGold < restCost) {
+        addLog(`💰 金幣不足！需要 ${restCost} 金幣，你只有 ${currentGold} 金幣。`);
+        updateInfoPanel('inn');
+        return;
+    }
+    
+    // 扣除金幣
+    gameState.player.gold = currentGold - restCost;
+    
+    // 計算恢復量
+    const healAmount = Math.min(
+        Math.floor(maxHealth * healPercent),
+        maxHealth - currentHealth
+    );
+    
+    // 恢復生命值
+    gameState.player.health = Math.min(currentHealth + healAmount, maxHealth);
+    
+    // 顯示結果
+    addLog(`🏨 ${restDescription}，恢復了${healAmount}點生命值！`);
+    addLog(`💰 花費了 ${restCost} 金幣。剩餘金幣: ${gameState.player.gold}`);
+    
+    if (restType === 'luxury' && gameState.player.health >= maxHealth) {
+        addLog('✨ 你感覺精力充沛，完全恢復了！');
+    }
+    
     updateUI();
     updateInfoPanel('inn');
 }

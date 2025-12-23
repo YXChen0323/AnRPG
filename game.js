@@ -251,10 +251,11 @@ function initGame() {
     updateUI();
     updateInfoPanel('default'); // 初始化右側資訊面板
     
-    // 立即更新按鈕顯示
+    // 立即更新按鈕顯示（多次確保）
     updateActionButtons();
-    
-    // 再次確保（使用 setTimeout 作為備份）
+    setTimeout(() => {
+        updateActionButtons();
+    }, 50);
     setTimeout(() => {
         updateActionButtons();
     }, 200);
@@ -492,15 +493,28 @@ function updateActionButtons() {
         elements.exploreBtn.disabled = isTown;
     }
     
-    // 隱藏一般行動按鈕區域（在城鎮中）
+    // 隱藏一般行動按鈕區域（在城鎮中）- 使用更直接的方式
     const actionButtons = document.getElementById('actionButtons');
     if (actionButtons) {
-        actionButtons.style.display = isTown ? 'none' : 'flex';
+        if (isTown) {
+            actionButtons.style.display = 'none';
+            actionButtons.style.visibility = 'hidden';
+        } else {
+            actionButtons.style.display = 'flex';
+            actionButtons.style.visibility = 'visible';
+        }
     }
     
     // 顯示/隱藏城鎮專用按鈕
-    if (elements.townButtons) {
-        elements.townButtons.style.display = isTown ? 'flex' : 'none';
+    const townButtons = document.getElementById('townButtons');
+    if (townButtons) {
+        if (isTown) {
+            townButtons.style.display = 'flex';
+            townButtons.style.visibility = 'visible';
+        } else {
+            townButtons.style.display = 'none';
+            townButtons.style.visibility = 'hidden';
+        }
     }
     
     // 顯示/隱藏訓練區域（強化設施）

@@ -1358,8 +1358,14 @@ function checkLevelUp() {
         gameState.player.attack = currentAttack + 3;
         gameState.player.defense = currentDefense + 2;
         
+        // 升級時也提升最大體力
+        const currentMaxEnergy = DataManager.getNumber(gameState.player.maxEnergy, 100);
+        gameState.player.maxEnergy = currentMaxEnergy + 10;
+        gameState.player.energy = gameState.player.maxEnergy; // 升級時完全恢復體力
+        
         addLog(`恭喜升級！你現在是${gameState.player.level}級！`);
-        addLog('生命值、攻擊力、防禦力都提升了！');
+        addLog('生命值、攻擊力、防禦力、最大體力都提升了！');
+        addLog('✨ 體力完全恢復！');
         
         checkAchievements();
         
@@ -1510,6 +1516,11 @@ function stayAtInn(restType = 'luxury') {
 
 // 城鎮行動
 function viewTownAction() {
+    // 檢查體力
+    if (!consumeEnergy(5, '查看城鎮行動')) {
+        return;
+    }
+    
     const actions = [
         {
             name: '查看公告欄',

@@ -269,6 +269,71 @@ header h1 {
     justify-content: center;
 }
 
+.town-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.btn-shop-town,
+.btn-action-town,
+.btn-inn-town,
+.btn-npc-town {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background: white;
+    color: #333;
+}
+
+.btn-shop-town {
+    background: #4caf50;
+    color: white;
+    border-color: #4caf50;
+}
+
+.btn-shop-town:hover {
+    background: #388e3c;
+}
+
+.btn-action-town {
+    background: #2196f3;
+    color: white;
+    border-color: #2196f3;
+}
+
+.btn-action-town:hover {
+    background: #1976d2;
+}
+
+.btn-inn-town {
+    background: #ff9800;
+    color: white;
+    border-color: #ff9800;
+}
+
+.btn-inn-town:hover {
+    background: #f57c00;
+}
+
+.btn-npc-town {
+    background: #9c27b0;
+    color: white;
+    border-color: #9c27b0;
+}
+
+.btn-npc-town:hover {
+    background: #7b1fa2;
+}
+
 .btn {
     padding: 10px 20px;
     border: 1px solid #ccc;

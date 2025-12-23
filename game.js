@@ -211,7 +211,12 @@ const elements = {
     trainDefenseBtn: document.getElementById('trainDefenseBtn'),
     trainPrecisionBtn: document.getElementById('trainPrecisionBtn'),
     trainAgilityBtn: document.getElementById('trainAgilityBtn'),
-    trainMeditationBtn: document.getElementById('trainMeditationBtn')
+    trainMeditationBtn: document.getElementById('trainMeditationBtn'),
+    townButtons: document.getElementById('townButtons'),
+    townShopBtn: document.getElementById('townShopBtn'),
+    townActionBtn: document.getElementById('townActionBtn'),
+    townInnBtn: document.getElementById('townInnBtn'),
+    townNpcBtn: document.getElementById('townNpcBtn')
 };
 
 // 初始化遊戲
@@ -458,9 +463,22 @@ function updateActionButtons() {
     // 確保 isTown 屬性正確判斷
     const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
     
-    // 在城鎮中隱藏探索按鈕，顯示訓練區域（強化設施）
+    // 在城鎮中隱藏探索按鈕和一般行動按鈕，顯示城鎮專用按鈕
     if (elements.exploreBtn) {
         elements.exploreBtn.style.display = isTown ? 'none' : 'inline-block';
+    }
+    
+    // 隱藏一般行動按鈕區域（在城鎮中）
+    if (elements.restBtn && elements.shopBtn) {
+        const actionButtons = elements.restBtn.parentElement;
+        if (actionButtons) {
+            actionButtons.style.display = isTown ? 'none' : 'flex';
+        }
+    }
+    
+    // 顯示/隱藏城鎮專用按鈕
+    if (elements.townButtons) {
+        elements.townButtons.style.display = isTown ? 'flex' : 'none';
     }
     
     // 顯示/隱藏訓練區域（強化設施）
@@ -806,6 +824,88 @@ function updateInfoPanel(type, data = {}) {
             `;
             break;
             
+        case 'npc':
+            elements.infoPanelTitle.textContent = 'NPC對話';
+            let npcHTML = '<div style="color: #666; line-height: 1.6;">';
+            
+            // 顯示未完成的任務
+            const activeQuests = gameState.quests.filter(q => !q.completed);
+            if (activeQuests.length > 0) {
+                npcHTML += '<p style="margin-bottom: 10px;"><strong>可接取的任務：</strong></p>';
+                activeQuests.forEach(quest => {
+                    let progress = 0;
+                    switch(quest.target) {
+                        case 'kills':
+                            progress = DataManager.getNumber(gameState.player.kills, 0);
+                            break;
+                        case 'bossKills':
+                            progress = DataManager.getNumber(gameState.player.bossKills, 0);
+                            break;
+                        case 'totalGold':
+                            progress = DataManager.getNumber(gameState.player.totalGold, 0);
+                            break;
+                    }
+                    const targetValue = DataManager.getNumber(quest.targetValue, 0);
+                    npcHTML += `
+                        <div style="background: #f5f5f5; padding: 10px; margin: 8px 0; border-radius: 5px; border-left: 3px solid #4caf50;">
+                            <p style="margin: 0; font-weight: 600;">${quest.name}</p>
+                            <p style="margin: 5px 0; font-size: 0.9em;">${quest.description}</p>
+                            <p style="margin: 5px 0; font-size: 0.85em; color: #888;">進度: ${progress}/${targetValue}</p>
+                            <p style="margin: 5px 0; font-size: 0.85em; color: #666;">獎勵: ${quest.reward.gold}金幣, ${quest.reward.exp}經驗值</p>
+                        </div>
+                    `;
+                });
+            } else {
+                npcHTML += '<p>目前沒有可接取的任務。</p>';
+            }
+            
+            npcHTML += '</div>';
+            elements.infoPanelContent.innerHTML = npcHTML;
+            break;
+            
+        case 'inn':
+            elements.infoPanelTitle.textContent = '旅館';
+            const innMaxHealth = DataManager.getNumber(gameState.player.maxHealth, 100);
+            const innCurrentHealth = DataManager.getNumber(gameState.player.health, 0);
+            const innHealthPercent = Math.floor((innCurrentHealth / innMaxHealth) * 100);
+            
+            elements.infoPanelContent.innerHTML = `
+                <div style="color: #666; line-height: 1.6;">
+                    <p style="margin-bottom: 15px;">歡迎來到旅館！這裡可以完全恢復你的生命值。</p>
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <p style="margin: 5px 0;"><strong>當前生命值:</strong> ${innCurrentHealth}/${innMaxHealth} (${innHealthPercent}%)</p>
+                    </div>
+                    <p style="margin-bottom: 10px;"><strong>服務選項：</strong></p>
+                    <button class="btn btn-inn-rest" onclick="stayAtInn()" style="width: 100%; padding: 12px; margin-top: 10px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        住宿休息（完全恢復生命值）
+                    </button>
+                </div>
+            `;
+            break;
+            
+        case 'action':
+            elements.infoPanelTitle.textContent = '城鎮行動';
+            elements.infoPanelContent.innerHTML = `
+                <div style="color: #666; line-height: 1.6;">
+                    <p style="margin-bottom: 15px;"><strong>可執行的行動：</strong></p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                            <strong>查看公告欄</strong> - 了解最新的冒險資訊
+                        </li>
+                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                            <strong>打聽情報</strong> - 獲得關於附近地區的資訊
+                        </li>
+                        <li style="margin: 8px 0; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                            <strong>查看排行榜</strong> - 查看你的冒險統計
+                        </li>
+                    </ul>
+                    <button class="btn btn-action-view" onclick="viewTownAction()" style="width: 100%; padding: 12px; margin-top: 15px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        執行行動
+                    </button>
+                </div>
+            `;
+            break;
+            
         case 'default':
         default:
             const location = gameState.currentLocation;
@@ -1036,6 +1136,80 @@ function rest() {
     elements.bossBtn.disabled = false;
 }
 
+// 旅館住宿（完全恢復生命值）
+function stayAtInn() {
+    if (gameState.currentEnemy) {
+        addLog('戰鬥中無法住宿！');
+        return;
+    }
+    
+    const location = gameState.currentLocation;
+    const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
+    
+    if (!isTown) {
+        addLog('只有在城鎮中才能使用旅館！');
+        return;
+    }
+    
+    const maxHealth = DataManager.getNumber(gameState.player.maxHealth, 100);
+    const currentHealth = DataManager.getNumber(gameState.player.health, 0);
+    
+    if (currentHealth >= maxHealth) {
+        addLog('你的生命值已經滿了，不需要住宿。');
+        updateInfoPanel('inn');
+        return;
+    }
+    
+    const healAmount = maxHealth - currentHealth;
+    gameState.player.health = maxHealth;
+    
+    addLog(`你在旅館中好好休息了一晚，完全恢復了生命值！恢復了${healAmount}點生命值。`);
+    updateUI();
+    updateInfoPanel('inn');
+}
+
+// 城鎮行動
+function viewTownAction() {
+    const actions = [
+        {
+            name: '查看公告欄',
+            description: '你查看了村莊的公告欄，上面寫著各種冒險者的消息和懸賞任務。',
+            effect: () => {
+                addLog('你從公告欄上了解到，最近黑暗森林中出現了強大的怪物。');
+                addLog('有冒險者懸賞擊敗這些怪物，獎勵豐厚！');
+            }
+        },
+        {
+            name: '打聽情報',
+            description: '你向村莊的居民打聽情報，了解附近地區的情況。',
+            effect: () => {
+                const tips = [
+                    '據說荒蕪平原的怪物比黑暗森林更強，但獎勵也更豐厚。',
+                    '惡魔洞穴是Boss的巢穴，只有強大的冒險者才敢進入。',
+                    '有傳聞說，擊敗Boss可以獲得特殊的獎勵。'
+                ];
+                const tip = tips[Math.floor(Math.random() * tips.length)];
+                addLog(tip);
+            }
+        },
+        {
+            name: '查看排行榜',
+            description: '你查看了冒險者排行榜，了解自己的排名。',
+            effect: () => {
+                const player = gameState.player;
+                addLog(`你的冒險統計：`);
+                addLog(`等級: ${player.level} | 擊殺數: ${player.kills} | Boss擊殺: ${player.bossKills}`);
+                addLog(`總獲得金幣: ${player.totalGold}`);
+            }
+        }
+    ];
+    
+    const action = actions[Math.floor(Math.random() * actions.length)];
+    addLog(`執行行動：${action.name}`);
+    addLog(action.description);
+    action.effect();
+}
+
 // 移動到新地點
 function moveToLocation() {
     if (gameState.currentEnemy) {
@@ -1232,6 +1406,20 @@ elements.restBtn.addEventListener('click', rest);
 elements.shopBtn.addEventListener('click', openShop);
 elements.closeShop.addEventListener('click', closeShop);
 elements.moveBtn.addEventListener('click', moveToLocation);
+
+// 城鎮按鈕事件監聽器
+if (elements.townShopBtn) {
+    elements.townShopBtn.addEventListener('click', openShop);
+}
+if (elements.townActionBtn) {
+    elements.townActionBtn.addEventListener('click', () => updateInfoPanel('action'));
+}
+if (elements.townInnBtn) {
+    elements.townInnBtn.addEventListener('click', () => updateInfoPanel('inn'));
+}
+if (elements.townNpcBtn) {
+    elements.townNpcBtn.addEventListener('click', () => updateInfoPanel('npc'));
+}
 
 // 訓練按鈕事件監聽器
 if (elements.trainStaminaBtn) {

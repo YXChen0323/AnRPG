@@ -1420,11 +1420,16 @@ function buyItem(index) {
     const item = gameState.shop[index];
     const player = gameState.player;
     
+    if (!item) {
+        addLog('錯誤：找不到該物品！');
+        return;
+    }
+    
     const itemCost = DataManager.getNumber(item.cost, 0);
     const currentGold = DataManager.getNumber(player.gold, 0);
     
     if (currentGold < itemCost) {
-        addLog('金幣不足！');
+        addLog(`💰 金幣不足！需要 ${itemCost} 金幣，你只有 ${currentGold} 金幣。`);
         return;
     }
     
@@ -1433,51 +1438,85 @@ function buyItem(index) {
         return;
     }
     
+    // 扣除金幣
     player.gold = currentGold - itemCost;
     const itemValue = DataManager.getNumber(item.value, 0);
+    const icon = item.icon || '📦';
     
+    // 根據物品類型處理效果
     switch (item.type) {
         case 'heal':
             const maxHealth = DataManager.getNumber(player.maxHealth, 100);
             const currentHealth = DataManager.getNumber(player.health, 0);
+            const healAmount = Math.min(itemValue, maxHealth - currentHealth);
             player.health = Math.min(maxHealth, currentHealth + itemValue);
-            addLog(`使用了${item.name}，恢復了${itemValue}點生命值！`);
+            if (healAmount > 0) {
+                addLog(`${icon} 使用了${item.name}，恢復了${healAmount}點生命值！`);
+            } else {
+                addLog(`${icon} 使用了${item.name}，但你的生命值已經滿了！`);
+            }
             break;
+            
         case 'attack':
             const currentAttack = DataManager.getNumber(player.attack, 10);
             player.attack = currentAttack + itemValue;
-            addLog(`使用了${item.name}，攻擊力永久增加${itemValue}點！`);
+            addLog(`${icon} 使用了${item.name}，攻擊力永久增加${itemValue}點！(現在: ${player.attack})`);
             break;
+            
         case 'defense':
             const currentDefense = DataManager.getNumber(player.defense, 5);
             player.defense = currentDefense + itemValue;
-            addLog(`使用了${item.name}，防禦力永久增加${itemValue}點！`);
+            addLog(`${icon} 使用了${item.name}，防禦力永久增加${itemValue}點！(現在: ${player.defense})`);
             break;
+            
         case 'maxHealth':
             const currentMaxHealth = DataManager.getNumber(player.maxHealth, 100);
             const currentHealth2 = DataManager.getNumber(player.health, 0);
             player.maxHealth = currentMaxHealth + itemValue;
-            player.health = currentHealth2 + itemValue;
-            addLog(`使用了${item.name}，最大生命值永久增加${itemValue}點！`);
+            player.health = currentHealth2 + itemValue; // 同時增加當前生命值
+            addLog(`${icon} 使用了${item.name}，最大生命值永久增加${itemValue}點！(現在: ${player.maxHealth})`);
             break;
+            
         case 'critChance':
             const currentCritChance = DataManager.getNumber(player.critChance, 0.1);
             player.critChance = currentCritChance + itemValue;
-            addLog(`使用了${item.name}，暴擊率永久增加${Math.floor(itemValue * 100)}%！`);
+            const newCritPercent = Math.floor(player.critChance * 100);
+            addLog(`${icon} 使用了${item.name}，暴擊率永久增加${Math.floor(itemValue * 100)}%！(現在: ${newCritPercent}%)`);
             break;
+            
         case 'dodgeChance':
             const currentDodgeChance = DataManager.getNumber(player.dodgeChance, 0.05);
             player.dodgeChance = currentDodgeChance + itemValue;
-            addLog(`使用了${item.name}，閃避率永久增加${Math.floor(itemValue * 100)}%！`);
+            const newDodgePercent = Math.floor(player.dodgeChance * 100);
+            addLog(`${icon} 使用了${item.name}，閃避率永久增加${Math.floor(itemValue * 100)}%！(現在: ${newDodgePercent}%)`);
             break;
+            
+        case 'exp':
+            const currentExp = DataManager.getNumber(player.exp, 0);
+            player.exp = currentExp + itemValue;
+            addLog(`${icon} 使用了${item.name}，獲得了${itemValue}點經驗值！`);
+            // 檢查是否升級
+            checkLevelUp();
+            break;
+            
+        default:
+            addLog(`未知的物品類型：${item.type}`);
+            // 退還金幣
+            player.gold = currentGold;
+            return;
     }
     
+    // 更新庫存（如果有限制）
     if (item.stock > 0) {
         item.stock--;
     }
     
+    // 更新UI和商店顯示
     updateUI();
-    updateInfoPanel('shop'); // 刷新商店
+    updateInfoPanel('shop');
+    
+    // 顯示購買成功訊息
+    addLog(`💰 購買成功！剩餘金幣: ${player.gold}`);
 }
 
 // 關閉商店（現在不需要，因為商店顯示在右側面板）

@@ -216,7 +216,8 @@ const elements = {
     townShopBtn: document.getElementById('townShopBtn'),
     townActionBtn: document.getElementById('townActionBtn'),
     townInnBtn: document.getElementById('townInnBtn'),
-    townNpcBtn: document.getElementById('townNpcBtn')
+    townNpcBtn: document.getElementById('townNpcBtn'),
+    townTrainingBtn: document.getElementById('townTrainingBtn')
 };
 
 // 初始化遊戲
@@ -846,16 +847,27 @@ function updateInfoPanel(type, data = {}) {
             elements.infoPanelTitle.textContent = '訓練設施';
             elements.infoPanelContent.innerHTML = `
                 <div style="color: #666; line-height: 1.6;">
-                    <p style="margin-bottom: 15px;"><strong>在城鎮中，你可以通過訓練來提升各項能力：</strong></p>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin: 8px 0;">• <strong>體能訓練</strong> - 提升最大生命值</li>
-                        <li style="margin: 8px 0;">• <strong>力量訓練</strong> - 提升攻擊力</li>
-                        <li style="margin: 8px 0;">• <strong>防禦訓練</strong> - 提升防禦力</li>
-                        <li style="margin: 8px 0;">• <strong>精準訓練</strong> - 提升暴擊率</li>
-                        <li style="margin: 8px 0;">• <strong>敏捷訓練</strong> - 提升閃避率</li>
-                        <li style="margin: 8px 0;">• <strong>冥想訓練</strong> - 提升經驗獲取倍率</li>
-                    </ul>
-                    <p style="margin-top: 15px; font-size: 0.9em; color: #888;">訓練效果會根據你的等級、當前能力和訓練次數進行補正。</p>
+                    <p style="margin-bottom: 15px;"><strong>在城鎮中，你可以通過訓練來提升各項能力。訓練效果會根據你的等級、當前能力和訓練次數進行補正。</strong></p>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px;">
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('stamina')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            體能訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升最大生命值</small>
+                        </button>
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('strength')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            力量訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升攻擊力</small>
+                        </button>
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('defense')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            防禦訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升防禦力</small>
+                        </button>
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('precision')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            精準訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升暴擊率</small>
+                        </button>
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('agility')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            敏捷訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升閃避率</small>
+                        </button>
+                        <button class="btn btn-training" onclick="TrainingSystem.performTraining('meditation')" style="padding: 15px 10px; background: white; border: 2px solid #4caf50; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; font-size: 14px; font-weight: 500; color: #2e7d32; text-align: center;">
+                            冥想訓練<br><small style="display: block; font-size: 0.85em; margin-top: 5px; opacity: 0.8;">提升經驗獲取倍率</small>
+                        </button>
+                    </div>
                 </div>
             `;
             break;
@@ -1458,6 +1470,9 @@ if (elements.townInnBtn) {
 }
 if (elements.townNpcBtn) {
     elements.townNpcBtn.addEventListener('click', () => updateInfoPanel('npc'));
+}
+if (elements.townTrainingBtn) {
+    elements.townTrainingBtn.addEventListener('click', () => updateInfoPanel('training'));
 }
 
 // 訓練按鈕事件監聽器

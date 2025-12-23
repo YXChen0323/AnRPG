@@ -334,6 +334,16 @@ header h1 {
     background: #7b1fa2;
 }
 
+.btn-training-town {
+    background: #4caf50;
+    color: white;
+    border-color: #4caf50;
+}
+
+.btn-training-town:hover {
+    background: #388e3c;
+}
+
 .btn {
     padding: 10px 20px;
     border: 1px solid #ccc;

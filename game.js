@@ -1514,51 +1514,300 @@ function stayAtInn(restType = 'luxury') {
     updateInfoPanel('inn');
 }
 
-// 城鎮行動
-function viewTownAction() {
-    // 檢查體力
-    if (!consumeEnergy(5, '查看城鎮行動')) {
-        return;
+// 執行城鎮行動
+function executeTownAction(actionType) {
+    const player = gameState.player;
+    const playerLevel = DataManager.getNumber(player.level, 1);
+    
+    switch(actionType) {
+        case 'bulletin':
+            // 查看公告欄
+            if (!consumeEnergy(5, '查看公告欄')) {
+                return;
+            }
+            addLog('📋 你查看了村莊的公告欄，上面寫著各種冒險者的消息和懸賞任務。');
+            
+            const bulletins = [
+                {
+                    title: '黑暗森林的威脅',
+                    content: '最近黑暗森林中出現了強大的怪物，有冒險者懸賞擊敗這些怪物，獎勵豐厚！',
+                    reward: () => {
+                        const goldGain = 10 + playerLevel * 2;
+                        const expGain = 5 + playerLevel;
+                        player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
+                        player.exp = DataManager.getNumber(player.exp, 0) + expGain;
+                        addLog(`💰 獲得 ${goldGain} 金幣和 ${expGain} 經驗值！`);
+                    }
+                },
+                {
+                    title: '荒蕪平原的寶藏',
+                    content: '有傳聞說荒蕪平原深處隱藏著珍貴的寶藏，但需要強大的實力才能獲得。',
+                    reward: () => {
+                        const goldGain = 15 + playerLevel * 3;
+                        player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
+                        addLog(`💰 獲得 ${goldGain} 金幣！`);
+                    }
+                },
+                {
+                    title: '惡魔洞穴的挑戰',
+                    content: '惡魔洞穴是Boss的巢穴，只有最強大的冒險者才敢進入。成功者將獲得豐厚獎勵！',
+                    reward: () => {
+                        const expGain = 10 + playerLevel * 2;
+                        player.exp = DataManager.getNumber(player.exp, 0) + expGain;
+                        addLog(`📚 獲得 ${expGain} 經驗值！`);
+                    }
+                }
+            ];
+            
+            const bulletin = bulletins[Math.floor(Math.random() * bulletins.length)];
+            addLog(`📌 ${bulletin.title}`);
+            addLog(bulletin.content);
+            bulletin.reward();
+            checkLevelUp();
+            break;
+            
+        case 'gossip':
+            // 打聽情報
+            if (!consumeEnergy(5, '打聽情報')) {
+                return;
+            }
+            addLog('💬 你向村莊的居民打聽情報，了解附近地區的情況。');
+            
+            const tips = [
+                {
+                    content: '據說荒蕪平原的怪物比黑暗森林更強，但獎勵也更豐厚。',
+                    reward: () => {
+                        const goldGain = 5 + playerLevel;
+                        player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
+                        addLog(`💰 獲得 ${goldGain} 金幣作為感謝！`);
+                    }
+                },
+                {
+                    content: '惡魔洞穴是Boss的巢穴，只有強大的冒險者才敢進入。',
+                    reward: () => {
+                        const expGain = 3 + playerLevel;
+                        player.exp = DataManager.getNumber(player.exp, 0) + expGain;
+                        addLog(`📚 獲得 ${expGain} 經驗值！`);
+                    }
+                },
+                {
+                    content: '有傳聞說，擊敗Boss可以獲得特殊的獎勵和稱號。',
+                    reward: () => {
+                        const goldGain = 8 + playerLevel * 2;
+                        player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
+                        addLog(`💰 獲得 ${goldGain} 金幣！`);
+                    }
+                },
+                {
+                    content: '聽說訓練設施可以大幅提升能力，但需要持續訓練才能看到效果。',
+                    reward: () => {
+                        const expGain = 5 + playerLevel;
+                        player.exp = DataManager.getNumber(player.exp, 0) + expGain;
+                        addLog(`📚 獲得 ${expGain} 經驗值！`);
+                    }
+                }
+            ];
+            
+            const tip = tips[Math.floor(Math.random() * tips.length)];
+            addLog(`💡 ${tip.content}`);
+            tip.reward();
+            checkLevelUp();
+            break;
+            
+        case 'ranking':
+            // 查看排行榜
+            if (!consumeEnergy(5, '查看排行榜')) {
+                return;
+            }
+            addLog('🏆 你查看了冒險者排行榜，了解自己的排名。');
+            addLog(`📊 你的冒險統計：`);
+            addLog(`等級: ${player.level} | 擊殺數: ${player.kills} | Boss擊殺: ${player.bossKills}`);
+            addLog(`總獲得金幣: ${player.totalGold.toLocaleString()}`);
+            
+            // 根據統計給予獎勵
+            const statsReward = Math.floor((player.kills + player.bossKills * 5) * 0.5);
+            if (statsReward > 0) {
+                const goldGain = statsReward;
+                player.gold = DataManager.getNumber(player.gold, 0) + goldGain;
+                addLog(`💰 根據你的成就，獲得 ${goldGain} 金幣獎勵！`);
+            }
+            break;
+            
+        case 'help':
+            // 幫助村民
+            if (!consumeEnergy(15, '幫助村民')) {
+                return;
+            }
+            addLog('🤝 你幫助村民完成了任務。');
+            
+            const helpRewards = [
+                {
+                    name: '搬運貨物',
+                    gold: 20 + playerLevel * 3,
+                    exp: 10 + playerLevel * 2
+                },
+                {
+                    name: '驅趕野獸',
+                    gold: 25 + playerLevel * 4,
+                    exp: 15 + playerLevel * 3
+                },
+                {
+                    name: '修復建築',
+                    gold: 30 + playerLevel * 5,
+                    exp: 20 + playerLevel * 4
+                }
+            ];
+            
+            const helpTask = helpRewards[Math.floor(Math.random() * helpRewards.length)];
+            addLog(`✅ 完成了「${helpTask.name}」任務！`);
+            
+            player.gold = DataManager.getNumber(player.gold, 0) + helpTask.gold;
+            player.exp = DataManager.getNumber(player.exp, 0) + helpTask.exp;
+            player.totalGold = DataManager.getNumber(player.totalGold, 0) + helpTask.gold;
+            
+            addLog(`💰 獲得 ${helpTask.gold} 金幣！`);
+            addLog(`📚 獲得 ${helpTask.exp} 經驗值！`);
+            checkLevelUp();
+            break;
+            
+        case 'arena':
+            // 參加競技場
+            if (!consumeEnergy(20, '參加競技場')) {
+                return;
+            }
+            addLog('⚔️ 你參加了城鎮競技場的挑戰！');
+            
+            const arenaLevel = Math.floor(playerLevel / 2) + 1;
+            const arenaGold = 50 + arenaLevel * 10 + Math.floor(Math.random() * 30);
+            const arenaExp = 30 + arenaLevel * 5 + Math.floor(Math.random() * 20);
+            
+            addLog(`🎯 你在第 ${arenaLevel} 級競技場中取得了勝利！`);
+            
+            player.gold = DataManager.getNumber(player.gold, 0) + arenaGold;
+            player.exp = DataManager.getNumber(player.exp, 0) + arenaExp;
+            player.totalGold = DataManager.getNumber(player.totalGold, 0) + arenaGold;
+            
+            addLog(`💰 獲得 ${arenaGold} 金幣！`);
+            addLog(`📚 獲得 ${arenaExp} 經驗值！`);
+            
+            // 有機率獲得額外獎勵
+            if (Math.random() < 0.3) {
+                const bonusGold = 20 + playerLevel * 2;
+                player.gold = DataManager.getNumber(player.gold, 0) + bonusGold;
+                addLog(`✨ 額外獲得 ${bonusGold} 金幣的獎勵！`);
+            }
+            
+            checkLevelUp();
+            break;
+            
+        case 'treasure':
+            // 尋找寶藏
+            if (!consumeEnergy(10, '尋找寶藏')) {
+                return;
+            }
+            addLog('💎 你在城鎮中尋找隱藏的寶藏...');
+            
+            const treasureChance = Math.random();
+            if (treasureChance < 0.4) {
+                // 找到小寶藏
+                const smallGold = 15 + playerLevel * 2 + Math.floor(Math.random() * 20);
+                player.gold = DataManager.getNumber(player.gold, 0) + smallGold;
+                player.totalGold = DataManager.getNumber(player.totalGold, 0) + smallGold;
+                addLog(`💰 找到了一個小寶箱！獲得 ${smallGold} 金幣！`);
+            } else if (treasureChance < 0.7) {
+                // 找到中等寶藏
+                const mediumGold = 30 + playerLevel * 4 + Math.floor(Math.random() * 30);
+                const mediumExp = 10 + playerLevel * 2;
+                player.gold = DataManager.getNumber(player.gold, 0) + mediumGold;
+                player.exp = DataManager.getNumber(player.exp, 0) + mediumExp;
+                player.totalGold = DataManager.getNumber(player.totalGold, 0) + mediumGold;
+                addLog(`💰 找到了一個寶箱！獲得 ${mediumGold} 金幣和 ${mediumExp} 經驗值！`);
+                checkLevelUp();
+            } else if (treasureChance < 0.9) {
+                // 找到大寶藏
+                const largeGold = 50 + playerLevel * 6 + Math.floor(Math.random() * 50);
+                const largeExp = 20 + playerLevel * 3;
+                player.gold = DataManager.getNumber(player.gold, 0) + largeGold;
+                player.exp = DataManager.getNumber(player.exp, 0) + largeExp;
+                player.totalGold = DataManager.getNumber(player.totalGold, 0) + largeGold;
+                addLog(`💰✨ 找到了一個大寶箱！獲得 ${largeGold} 金幣和 ${largeExp} 經驗值！`);
+                checkLevelUp();
+            } else {
+                // 找到稀有寶藏
+                const rareGold = 100 + playerLevel * 10;
+                const rareExp = 50 + playerLevel * 5;
+                player.gold = DataManager.getNumber(player.gold, 0) + rareGold;
+                player.exp = DataManager.getNumber(player.exp, 0) + rareExp;
+                player.totalGold = DataManager.getNumber(player.totalGold, 0) + rareGold;
+                addLog(`💰💎 找到了稀有寶箱！獲得 ${rareGold} 金幣和 ${rareExp} 經驗值！`);
+                checkLevelUp();
+            }
+            break;
+            
+        case 'blacksmith':
+            // 拜訪鐵匠
+            const blacksmithCost = 30;
+            const currentGold = DataManager.getNumber(player.gold, 0);
+            
+            if (currentGold < blacksmithCost) {
+                addLog(`💰 金幣不足！需要 ${blacksmithCost} 金幣，你只有 ${currentGold} 金幣。`);
+                return;
+            }
+            
+            if (!consumeEnergy(15, '拜訪鐵匠')) {
+                return;
+            }
+            
+            player.gold = currentGold - blacksmithCost;
+            addLog('🔨 你拜訪了鐵匠，向他學習了武器和防具的知識。');
+            
+            // 隨機提升一項屬性
+            const statTypes = ['attack', 'defense', 'critChance', 'dodgeChance'];
+            const statType = statTypes[Math.floor(Math.random() * statTypes.length)];
+            
+            switch(statType) {
+                case 'attack':
+                    const currentAttack = DataManager.getNumber(player.attack, 10);
+                    const attackGain = 2 + Math.floor(playerLevel / 3);
+                    player.attack = currentAttack + attackGain;
+                    addLog(`⚔️ 攻擊力提升了 ${attackGain} 點！`);
+                    break;
+                case 'defense':
+                    const currentDefense = DataManager.getNumber(player.defense, 5);
+                    const defenseGain = 1 + Math.floor(playerLevel / 4);
+                    player.defense = currentDefense + defenseGain;
+                    addLog(`🛡️ 防禦力提升了 ${defenseGain} 點！`);
+                    break;
+                case 'critChance':
+                    const currentCrit = DataManager.getNumber(player.critChance, 0.1);
+                    const critGain = 0.01 + Math.floor(playerLevel / 10) * 0.005;
+                    player.critChance = Math.min(currentCrit + critGain, 0.5);
+                    addLog(`💥 暴擊率提升了 ${(critGain * 100).toFixed(1)}%！`);
+                    break;
+                case 'dodgeChance':
+                    const currentDodge = DataManager.getNumber(player.dodgeChance, 0.05);
+                    const dodgeGain = 0.008 + Math.floor(playerLevel / 10) * 0.004;
+                    player.dodgeChance = Math.min(currentDodge + dodgeGain, 0.4);
+                    addLog(`🌀 閃避率提升了 ${(dodgeGain * 100).toFixed(1)}%！`);
+                    break;
+            }
+            
+            addLog(`💰 花費了 ${blacksmithCost} 金幣。`);
+            break;
+            
+        default:
+            addLog('未知的行動類型！');
+            return;
     }
     
-    const actions = [
-        {
-            name: '查看公告欄',
-            description: '你查看了村莊的公告欄，上面寫著各種冒險者的消息和懸賞任務。',
-            effect: () => {
-                addLog('你從公告欄上了解到，最近黑暗森林中出現了強大的怪物。');
-                addLog('有冒險者懸賞擊敗這些怪物，獎勵豐厚！');
-            }
-        },
-        {
-            name: '打聽情報',
-            description: '你向村莊的居民打聽情報，了解附近地區的情況。',
-            effect: () => {
-                const tips = [
-                    '據說荒蕪平原的怪物比黑暗森林更強，但獎勵也更豐厚。',
-                    '惡魔洞穴是Boss的巢穴，只有強大的冒險者才敢進入。',
-                    '有傳聞說，擊敗Boss可以獲得特殊的獎勵。'
-                ];
-                const tip = tips[Math.floor(Math.random() * tips.length)];
-                addLog(tip);
-            }
-        },
-        {
-            name: '查看排行榜',
-            description: '你查看了冒險者排行榜，了解自己的排名。',
-            effect: () => {
-                const player = gameState.player;
-                addLog(`你的冒險統計：`);
-                addLog(`等級: ${player.level} | 擊殺數: ${player.kills} | Boss擊殺: ${player.bossKills}`);
-                addLog(`總獲得金幣: ${player.totalGold}`);
-            }
-        }
-    ];
-    
-    const action = actions[Math.floor(Math.random() * actions.length)];
-    addLog(`執行行動：${action.name}`);
-    addLog(action.description);
-    action.effect();
+    updateUI();
+    updateInfoPanel('action');
+}
+
+// 城鎮行動（保留舊函數以兼容）
+function viewTownAction() {
+    // 直接顯示行動面板，不消耗體力
+    updateInfoPanel('action');
 }
 
 // 移動到新地點

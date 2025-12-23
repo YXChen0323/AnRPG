@@ -40,6 +40,18 @@ const DataManager = {
         this.setNumber(player, 'bossKills', player.bossKills, 0);
         this.setNumber(player, 'totalGold', player.totalGold, 0);
         
+        // 初始化裝備系統
+        if (!player.equipment) {
+            player.equipment = {
+                weapon: null,
+                armor: null,
+                accessory: null
+            };
+        }
+        if (!player.inventory) {
+            player.inventory = [];
+        }
+        
         // 初始化訓練次數
         if (!player.trainingCount) {
             player.trainingCount = {
@@ -101,6 +113,12 @@ const gameState = {
         kills: 0,              // 擊殺數
         bossKills: 0,         // Boss擊殺數
         totalGold: 0,          // 總獲得金幣
+        equipment: {            // 裝備欄位
+            weapon: null,       // 武器
+            armor: null,        // 防具
+            accessory: null     // 飾品
+        },
+        inventory: [],           // 背包（未裝備的物品）
         trainingCount: {      // 訓練次數（用於補正計算）
             stamina: 0,        // 體能訓練
             strength: 0,       // 力量訓練

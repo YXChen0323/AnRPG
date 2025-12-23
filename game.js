@@ -240,15 +240,24 @@ function initGame() {
     }
     
     // 強制設置 isTown 屬性
-    gameState.currentLocation.isTown = gameState.currentLocation.name === '起始村莊';
+    gameState.currentLocation.isTown = (gameState.currentLocation.name === '起始村莊');
+    
+    // 確保 locations 數組中的起始村莊也有 isTown 屬性
+    const startingLocInArray = gameState.locations.find(loc => loc.name === '起始村莊');
+    if (startingLocInArray) {
+        startingLocInArray.isTown = true;
+    }
     
     updateUI();
     updateInfoPanel('default'); // 初始化右側資訊面板
     
-    // 強制更新按鈕顯示（使用 setTimeout 確保 DOM 已準備好）
+    // 立即更新按鈕顯示
+    updateActionButtons();
+    
+    // 再次確保（使用 setTimeout 作為備份）
     setTimeout(() => {
         updateActionButtons();
-    }, 100);
+    }, 200);
     
     addLog('遊戲開始！歡迎來到文字RPG世界！');
     addLog('在起始村莊中，你可以進行訓練來提升能力。');
@@ -468,20 +477,25 @@ function updateUI() {
 // 更新行動按鈕顯示
 function updateActionButtons() {
     const location = gameState.currentLocation;
-    // 確保 isTown 屬性正確判斷
+    // 確保 isTown 屬性正確判斷（強制檢查）
     const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
+    
+    // 強制設置 isTown 屬性
+    if (location) {
+        location.isTown = (location.name === '起始村莊');
+    }
     
     // 在城鎮中隱藏探索按鈕和一般行動按鈕，顯示城鎮專用按鈕
     if (elements.exploreBtn) {
         elements.exploreBtn.style.display = isTown ? 'none' : 'inline-block';
+        // 同時禁用按鈕
+        elements.exploreBtn.disabled = isTown;
     }
     
     // 隱藏一般行動按鈕區域（在城鎮中）
-    if (elements.restBtn && elements.shopBtn) {
-        const actionButtons = elements.restBtn.parentElement;
-        if (actionButtons) {
-            actionButtons.style.display = isTown ? 'none' : 'flex';
-        }
+    const actionButtons = document.getElementById('actionButtons');
+    if (actionButtons) {
+        actionButtons.style.display = isTown ? 'none' : 'flex';
     }
     
     // 顯示/隱藏城鎮專用按鈕
@@ -537,9 +551,11 @@ function explore() {
     
     const location = gameState.currentLocation;
     
-    // 城鎮不能探索
-    if (location.isTown) {
+    // 城鎮不能探索（強制檢查）
+    const isTown = (location && (location.isTown === true || location.name === '起始村莊'));
+    if (isTown) {
         addLog('在城鎮中不需要探索，這裡很安全。你可以進行訓練來提升能力。');
+        addLog('請使用城鎮按鈕：商店、行動、旅館、NPC');
         return;
     }
     
@@ -1450,5 +1466,17 @@ if (elements.trainMeditationBtn) {
 }
 
 
-// 初始化遊戲
-initGame();
+// 確保 DOM 載入完成後再初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGame);
+} else {
+    // DOM 已經載入完成
+    initGame();
+}
+
+// 額外確保：在 window 載入後再次檢查
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        updateActionButtons();
+    }, 100);
+});

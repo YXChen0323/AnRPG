@@ -15,21 +15,31 @@ if %errorlevel% neq 0 (
 )
 
 REM 添加所有文件
-echo [2/5] 添加文件到 Git...
+echo [2/5] Adding files to Git...
 git add .
 if %errorlevel% neq 0 (
-    echo 錯誤：無法添加文件
+    echo Error: Failed to add files
     pause
     exit /b 1
 )
 
-REM 創建初始提交
-echo [3/5] 創建初始提交...
-git commit -m "Initial commit: Text RPG Game"
-if %errorlevel% neq 0 (
-    echo 錯誤：無法創建提交
-    pause
-    exit /b 1
+REM 檢查是否有變更需要提交
+git diff --cached --quiet
+if %errorlevel% equ 0 (
+    git diff --quiet
+    if %errorlevel% equ 0 (
+        echo No changes to commit. All files are up to date.
+    ) else (
+        echo [3/5] Creating commit...
+        git commit -m "Update: Text RPG Game"
+    )
+) else (
+    REM 創建提交
+    echo [3/5] Creating commit...
+    git commit -m "Update: Text RPG Game"
+    if %errorlevel% neq 0 (
+        echo Warning: Failed to create commit, but continuing...
+    )
 )
 
 REM 設置主分支

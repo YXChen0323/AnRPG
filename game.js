@@ -1440,7 +1440,10 @@ elements.battleBtn.addEventListener('click', battle);
 elements.bossBtn.addEventListener('click', challengeBoss);
 elements.restBtn.addEventListener('click', rest);
 elements.shopBtn.addEventListener('click', openShop);
-elements.closeShop.addEventListener('click', closeShop);
+// closeShop 已移除（商店現在在右側面板顯示）
+if (elements.closeShop) {
+    elements.closeShop.addEventListener('click', closeShop);
+}
 elements.moveBtn.addEventListener('click', moveToLocation);
 
 // 城鎮按鈕事件監聽器

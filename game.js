@@ -1007,21 +1007,81 @@ function updateInfoPanel(type, data = {}) {
             break;
             
         case 'inn':
-            elements.infoPanelTitle.textContent = '旅館';
+            elements.infoPanelTitle.textContent = '🏨 旅館';
             const innMaxHealth = DataManager.getNumber(gameState.player.maxHealth, 100);
             const innCurrentHealth = DataManager.getNumber(gameState.player.health, 0);
             const innHealthPercent = Math.floor((innCurrentHealth / innMaxHealth) * 100);
+            const innCurrentGold = DataManager.getNumber(gameState.player.gold, 0);
+            const healAmount = innMaxHealth - innCurrentHealth;
+            
+            // 計算不同服務的價格
+            const basicRestCost = 10; // 基礎休息：恢復30%
+            const goodRestCost = 25; // 良好休息：恢復60%
+            const luxuryRestCost = 50; // 豪華休息：完全恢復
+            
+            const canAffordBasic = innCurrentGold >= basicRestCost;
+            const canAffordGood = innCurrentGold >= goodRestCost;
+            const canAffordLuxury = innCurrentGold >= luxuryRestCost;
             
             elements.infoPanelContent.innerHTML = `
                 <div style="color: #666; line-height: 1.6;">
-                    <p style="margin-bottom: 15px;">歡迎來到旅館！這裡可以完全恢復你的生命值。</p>
-                    <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-                        <p style="margin: 5px 0;"><strong>當前生命值:</strong> ${innCurrentHealth}/${innMaxHealth} (${innHealthPercent}%)</p>
+                    <p style="margin-bottom: 15px; font-size: 1.05em;">🏨 歡迎來到旅館！這裡提供各種休息服務來恢復你的生命值。</p>
+                    
+                    <div style="background: #f5f5f5; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 3px solid #4caf50;">
+                        <p style="margin: 5px 0; font-size: 0.95em;"><strong>當前生命值:</strong> <span style="color: ${innHealthPercent > 60 ? '#4caf50' : innHealthPercent > 30 ? '#ff9800' : '#f44336'}; font-weight: 600;">${innCurrentHealth}/${innMaxHealth}</span> (${innHealthPercent}%)</p>
+                        <p style="margin: 5px 0; font-size: 0.95em;"><strong>💰 當前金幣:</strong> ${innCurrentGold}</p>
+                        ${healAmount > 0 ? `<p style="margin: 5px 0; font-size: 0.9em; color: #888;">可恢復: ${healAmount} 點生命值</p>` : '<p style="margin: 5px 0; font-size: 0.9em; color: #4caf50;">生命值已滿！</p>'}
                     </div>
-                    <p style="margin-bottom: 10px;"><strong>服務選項：</strong></p>
-                    <button class="btn btn-inn-rest" onclick="stayAtInn()" style="width: 100%; padding: 12px; margin-top: 10px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        住宿休息（完全恢復生命值）
-                    </button>
+                    
+                    <p style="margin-bottom: 10px; font-weight: 600; color: #333;">服務選項：</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- 基礎休息 -->
+                        <div style="background: ${canAffordBasic ? '#fff' : '#f5f5f5'}; border: 1px solid ${canAffordBasic ? '#4caf50' : '#ccc'}; border-radius: 6px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; color: #333; font-size: 1em;">🛏️ 基礎休息</h4>
+                                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">恢復30%生命值</p>
+                                </div>
+                                <span style="font-weight: 600; color: #ff9800;">💰 ${basicRestCost}</span>
+                            </div>
+                            <button class="btn btn-inn-basic" onclick="stayAtInn('basic')" ${!canAffordBasic || healAmount <= 0 ? 'disabled' : ''} style="width: 100%; padding: 10px; background: ${canAffordBasic ? '#4caf50' : '#ccc'}; color: white; border: none; border-radius: 4px; cursor: ${canAffordBasic ? 'pointer' : 'not-allowed'}; font-size: 0.9em;">
+                                ${!canAffordBasic ? '💰不足' : healAmount <= 0 ? '生命值已滿' : '選擇此服務'}
+                            </button>
+                        </div>
+                        
+                        <!-- 良好休息 -->
+                        <div style="background: ${canAffordGood ? '#fff' : '#f5f5f5'}; border: 1px solid ${canAffordGood ? '#2196f3' : '#ccc'}; border-radius: 6px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; color: #333; font-size: 1em;">🛋️ 良好休息</h4>
+                                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">恢復60%生命值</p>
+                                </div>
+                                <span style="font-weight: 600; color: #ff9800;">💰 ${goodRestCost}</span>
+                            </div>
+                            <button class="btn btn-inn-good" onclick="stayAtInn('good')" ${!canAffordGood || healAmount <= 0 ? 'disabled' : ''} style="width: 100%; padding: 10px; background: ${canAffordGood ? '#2196f3' : '#ccc'}; color: white; border: none; border-radius: 4px; cursor: ${canAffordGood ? 'pointer' : 'not-allowed'}; font-size: 0.9em;">
+                                ${!canAffordGood ? '💰不足' : healAmount <= 0 ? '生命值已滿' : '選擇此服務'}
+                            </button>
+                        </div>
+                        
+                        <!-- 豪華休息 -->
+                        <div style="background: ${canAffordLuxury ? '#fff' : '#f5f5f5'}; border: 1px solid ${canAffordLuxury ? '#ff9800' : '#ccc'}; border-radius: 6px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; color: #333; font-size: 1em;">✨ 豪華休息</h4>
+                                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.85em;">完全恢復生命值</p>
+                                </div>
+                                <span style="font-weight: 600; color: #ff9800;">💰 ${luxuryRestCost}</span>
+                            </div>
+                            <button class="btn btn-inn-luxury" onclick="stayAtInn('luxury')" ${!canAffordLuxury || healAmount <= 0 ? 'disabled' : ''} style="width: 100%; padding: 10px; background: ${canAffordLuxury ? '#ff9800' : '#ccc'}; color: white; border: none; border-radius: 4px; cursor: ${canAffordLuxury ? 'pointer' : 'not-allowed'}; font-size: 0.9em;">
+                                ${!canAffordLuxury ? '💰不足' : healAmount <= 0 ? '生命值已滿' : '選擇此服務'}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; border-left: 3px solid #ffc107;">
+                        <p style="margin: 0; font-size: 0.85em; color: #856404;">💡 提示：選擇合適的休息服務可以節省金幣。如果生命值損失不多，基礎休息就足夠了！</p>
+                    </div>
                 </div>
             `;
             break;

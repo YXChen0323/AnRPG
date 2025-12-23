@@ -33,9 +33,22 @@ const DataManager = {
         this.setNumber(player, 'gold', player.gold, 0);
         this.setNumber(player, 'critChance', player.critChance, 0.1);
         this.setNumber(player, 'dodgeChance', player.dodgeChance, 0.05);
+        this.setNumber(player, 'expMultiplier', player.expMultiplier, 1.0);
         this.setNumber(player, 'kills', player.kills, 0);
         this.setNumber(player, 'bossKills', player.bossKills, 0);
         this.setNumber(player, 'totalGold', player.totalGold, 0);
+        
+        // 初始化訓練次數
+        if (!player.trainingCount) {
+            player.trainingCount = {
+                stamina: 0,
+                strength: 0,
+                defense: 0,
+                precision: 0,
+                agility: 0,
+                meditation: 0
+            };
+        }
     },
     
     // 初始化敵人數據
@@ -80,9 +93,18 @@ const gameState = {
         gold: 0,
         critChance: 0.1,      // 10% 暴擊率
         dodgeChance: 0.05,    // 5% 閃避率
+        expMultiplier: 1.0,   // 經驗獲取倍率
         kills: 0,              // 擊殺數
         bossKills: 0,         // Boss擊殺數
-        totalGold: 0          // 總獲得金幣
+        totalGold: 0,          // 總獲得金幣
+        trainingCount: {      // 訓練次數（用於補正計算）
+            stamina: 0,        // 體能訓練
+            strength: 0,       // 力量訓練
+            defense: 0,        // 防禦訓練
+            precision: 0,     // 精準訓練
+            agility: 0,        // 敏捷訓練
+            meditation: 0      // 冥想訓練
+        }
     },
     currentLocation: {
         name: '起始村莊',
@@ -93,10 +115,11 @@ const gameState = {
     locations: [
         {
             name: '起始村莊',
-            description: '你站在一個寧靜的村莊入口，遠處傳來怪物的低吼聲...',
+            description: '一個寧靜安全的村莊，這裡有各種訓練設施可以提升你的能力。',
             type: 'village',
             enemyLevel: 1,
-            goldMultiplier: 1.0
+            goldMultiplier: 1.0,
+            isTown: true  // 標記為城鎮，不會遇到怪物
         },
         {
             name: '黑暗森林',
@@ -183,7 +206,14 @@ const elements = {
     shopItems: document.getElementById('shopItems'),
     closeShop: document.getElementById('closeShop'),
     locationSelect: document.getElementById('locationSelect'),
-    moveBtn: document.getElementById('moveBtn')
+    moveBtn: document.getElementById('moveBtn'),
+    trainingArea: document.getElementById('trainingArea'),
+    trainStaminaBtn: document.getElementById('trainStaminaBtn'),
+    trainStrengthBtn: document.getElementById('trainStrengthBtn'),
+    trainDefenseBtn: document.getElementById('trainDefenseBtn'),
+    trainPrecisionBtn: document.getElementById('trainPrecisionBtn'),
+    trainAgilityBtn: document.getElementById('trainAgilityBtn'),
+    trainMeditationBtn: document.getElementById('trainMeditationBtn')
 };
 
 // 初始化遊戲
@@ -192,12 +222,185 @@ function initGame() {
     DataManager.initPlayer(gameState.player);
     gameState.locations.forEach(loc => DataManager.initLocation(loc));
     
+    // 確保當前地點設置為起始村莊
+    const startingLocation = gameState.locations.find(loc => loc.name === '起始村莊');
+    if (startingLocation) {
+        gameState.currentLocation = { ...startingLocation };
+    }
+    
     updateUI();
     addLog('遊戲開始！歡迎來到文字RPG世界！');
-    addLog('點擊「探索」按鈕開始你的冒險吧！');
+    addLog('在起始村莊中，你可以進行訓練來提升能力。');
+    addLog('離開城鎮後，就可以探索和戰鬥了！');
     checkQuests();
     checkAchievements();
 }
+
+// 訓練補正計算系統
+const TrainingSystem = {
+    // 計算訓練效果（帶補正）
+    calculateTrainingGain(baseGain, currentValue, level, trainingCount, statType) {
+        // 基礎增益
+        let gain = baseGain;
+        
+        // 等級補正：等級越高，單次訓練效果越好（但遞增幅度遞減）
+        const levelBonus = Math.sqrt(level) * 0.5;
+        gain += levelBonus;
+        
+        // 當前數值補正：數值越高，提升越困難（遞減效果）
+        const diminishingFactor = Math.max(0.3, 1 - (currentValue / (currentValue + 100)));
+        gain *= diminishingFactor;
+        
+        // 訓練次數補正：訓練次數越多，效果遞減（疲勞度）
+        const fatigueFactor = Math.max(0.5, 1 - (trainingCount / (trainingCount + 50)));
+        gain *= fatigueFactor;
+        
+        // 隨機波動（±15%）
+        const variance = 0.15;
+        const randomFactor = 1 + (Math.random() * 2 - 1) * variance;
+        gain *= randomFactor;
+        
+        // 根據屬性類型調整
+        switch(statType) {
+            case 'maxHealth':
+                gain = Math.floor(gain * 2); // 生命值提升較多
+                break;
+            case 'attack':
+            case 'defense':
+                gain = Math.floor(gain * 1.5); // 攻擊防禦中等提升
+                break;
+            case 'critChance':
+            case 'dodgeChance':
+                gain = Math.floor(gain * 100) / 1000; // 百分比屬性提升較少
+                break;
+            case 'expMultiplier':
+                gain = Math.floor(gain * 100) / 1000; // 經驗倍率提升較少
+                break;
+            default:
+                gain = Math.floor(gain);
+        }
+        
+        return DataManager.getNumber(gain, 0);
+    },
+    
+    // 執行訓練
+    performTraining(trainingType) {
+        const player = gameState.player;
+        const location = gameState.currentLocation;
+        
+        // 檢查是否在城鎮
+        if (!location.isTown) {
+            addLog('只有在城鎮中才能進行訓練！');
+            return;
+        }
+        
+        if (gameState.currentEnemy) {
+            addLog('戰鬥中無法訓練！');
+            return;
+        }
+        
+        const level = DataManager.getNumber(player.level, 1);
+        const trainingCount = DataManager.getNumber(player.trainingCount[trainingType], 0);
+        
+        let baseGain = 0;
+        let statType = '';
+        let statName = '';
+        let currentValue = 0;
+        let trainingName = '';
+        
+        switch(trainingType) {
+            case 'stamina':
+                trainingName = '體能訓練';
+                baseGain = 5;
+                statType = 'maxHealth';
+                statName = '最大生命值';
+                currentValue = DataManager.getNumber(player.maxHealth, 100);
+                break;
+            case 'strength':
+                trainingName = '力量訓練';
+                baseGain = 3;
+                statType = 'attack';
+                statName = '攻擊力';
+                currentValue = DataManager.getNumber(player.attack, 10);
+                break;
+            case 'defense':
+                trainingName = '防禦訓練';
+                baseGain = 2;
+                statType = 'defense';
+                statName = '防禦力';
+                currentValue = DataManager.getNumber(player.defense, 5);
+                break;
+            case 'precision':
+                trainingName = '精準訓練';
+                baseGain = 0.01;
+                statType = 'critChance';
+                statName = '暴擊率';
+                currentValue = DataManager.getNumber(player.critChance, 0.1);
+                break;
+            case 'agility':
+                trainingName = '敏捷訓練';
+                baseGain = 0.008;
+                statType = 'dodgeChance';
+                statName = '閃避率';
+                currentValue = DataManager.getNumber(player.dodgeChance, 0.05);
+                break;
+            case 'meditation':
+                trainingName = '冥想訓練';
+                baseGain = 0.005;
+                statType = 'expMultiplier';
+                statName = '經驗獲取倍率';
+                currentValue = DataManager.getNumber(player.expMultiplier, 1.0);
+                break;
+            default:
+                addLog('未知的訓練類型！');
+                return;
+        }
+        
+        // 計算訓練增益
+        const gain = this.calculateTrainingGain(baseGain, currentValue, level, trainingCount, statType);
+        
+        if (gain <= 0) {
+            addLog(`${trainingName}效果不佳，你感到疲憊，需要休息一下。`);
+            return;
+        }
+        
+        // 應用增益
+        const newValue = currentValue + gain;
+        
+        switch(statType) {
+            case 'maxHealth':
+                player.maxHealth = newValue;
+                player.health = Math.min(player.health + gain, player.maxHealth);
+                addLog(`${trainingName}完成！${statName}提升了${Math.floor(gain)}點！`);
+                break;
+            case 'attack':
+                player.attack = newValue;
+                addLog(`${trainingName}完成！${statName}提升了${Math.floor(gain)}點！`);
+                break;
+            case 'defense':
+                player.defense = newValue;
+                addLog(`${trainingName}完成！${statName}提升了${Math.floor(gain)}點！`);
+                break;
+            case 'critChance':
+                player.critChance = Math.min(newValue, 0.5); // 最高50%
+                addLog(`${trainingName}完成！${statName}提升了${(gain * 100).toFixed(2)}%！`);
+                break;
+            case 'dodgeChance':
+                player.dodgeChance = Math.min(newValue, 0.4); // 最高40%
+                addLog(`${trainingName}完成！${statName}提升了${(gain * 100).toFixed(2)}%！`);
+                break;
+            case 'expMultiplier':
+                player.expMultiplier = Math.min(newValue, 2.0); // 最高2倍
+                addLog(`${trainingName}完成！${statName}提升了${(gain * 100).toFixed(2)}%！`);
+                break;
+        }
+        
+        // 增加訓練次數
+        player.trainingCount[trainingType] = trainingCount + 1;
+        
+        updateUI();
+    }
+};
 
 // 更新UI
 function updateUI() {
@@ -235,6 +438,25 @@ function updateUI() {
     }
     if (elements.locationDescription) {
         elements.locationDescription.textContent = gameState.currentLocation.description || '';
+    }
+    
+    // 根據地點類型顯示/隱藏按鈕
+    updateActionButtons();
+}
+
+// 更新行動按鈕顯示
+function updateActionButtons() {
+    const location = gameState.currentLocation;
+    const isTown = location.isTown || false;
+    
+    // 在城鎮中隱藏探索按鈕，顯示訓練按鈕
+    if (elements.exploreBtn) {
+        elements.exploreBtn.style.display = isTown ? 'none' : 'inline-block';
+    }
+    
+    // 顯示/隱藏訓練區域
+    if (elements.trainingArea) {
+        elements.trainingArea.style.display = isTown ? 'block' : 'none';
     }
 }
 
@@ -274,6 +496,13 @@ function explore() {
     }
     
     const location = gameState.currentLocation;
+    
+    // 城鎮不能探索
+    if (location.isTown) {
+        addLog('在城鎮中不需要探索，這裡很安全。你可以進行訓練來提升能力。');
+        return;
+    }
+    
     addLog(`你在${location.name}中探索...`);
     
     // 根據位置類型決定遇到什麼
@@ -638,11 +867,13 @@ function challengeBoss() {
 function victory(enemy) {
     addLog(`你擊敗了${enemy.name}！`);
     
-    // 獲得經驗值
-    const expGain = DataManager.getNumber(enemy.exp, 0);
+    // 獲得經驗值（應用經驗倍率）
+    const baseExp = DataManager.getNumber(enemy.exp, 0);
+    const expMultiplier = DataManager.getNumber(gameState.player.expMultiplier, 1.0);
+    const expGain = DataManager.safeMath(() => Math.floor(baseExp * expMultiplier), baseExp);
     const currentExp = DataManager.getNumber(gameState.player.exp, 0);
     gameState.player.exp = currentExp + expGain;
-    addLog(`獲得${expGain}點經驗值！`);
+    addLog(`獲得${expGain}點經驗值！${expMultiplier > 1.0 ? `(倍率: ${expMultiplier.toFixed(2)}x)` : ''}`);
     
     // 獲得金幣
     const goldGain = DataManager.getNumber(enemy.gold, 0);
@@ -747,13 +978,24 @@ function moveToLocation() {
     const locationIndex = parseInt(elements.locationSelect.value);
     const newLocation = gameState.locations[locationIndex];
     
+    if (!newLocation) {
+        addLog('無效的地點！');
+        return;
+    }
+    
     if (gameState.currentLocation.name === newLocation.name) {
         addLog('你已經在這個地點了！');
         return;
     }
     
     gameState.currentLocation = { ...newLocation };
-    addLog(`你來到了${gameState.currentLocation.name}。`);
+    
+    if (newLocation.isTown) {
+        addLog(`你來到了${gameState.currentLocation.name}。這裡很安全，可以進行訓練。`);
+    } else {
+        addLog(`你來到了${gameState.currentLocation.name}。這裡充滿危險，準備好戰鬥吧！`);
+    }
+    
     updateUI();
     
     // 更新選擇器顯示
@@ -937,6 +1179,26 @@ elements.restBtn.addEventListener('click', rest);
 elements.shopBtn.addEventListener('click', openShop);
 elements.closeShop.addEventListener('click', closeShop);
 elements.moveBtn.addEventListener('click', moveToLocation);
+
+// 訓練按鈕事件監聽器
+if (elements.trainStaminaBtn) {
+    elements.trainStaminaBtn.addEventListener('click', () => TrainingSystem.performTraining('stamina'));
+}
+if (elements.trainStrengthBtn) {
+    elements.trainStrengthBtn.addEventListener('click', () => TrainingSystem.performTraining('strength'));
+}
+if (elements.trainDefenseBtn) {
+    elements.trainDefenseBtn.addEventListener('click', () => TrainingSystem.performTraining('defense'));
+}
+if (elements.trainPrecisionBtn) {
+    elements.trainPrecisionBtn.addEventListener('click', () => TrainingSystem.performTraining('precision'));
+}
+if (elements.trainAgilityBtn) {
+    elements.trainAgilityBtn.addEventListener('click', () => TrainingSystem.performTraining('agility'));
+}
+if (elements.trainMeditationBtn) {
+    elements.trainMeditationBtn.addEventListener('click', () => TrainingSystem.performTraining('meditation'));
+}
 
 // 點擊模態框外部關閉
 window.addEventListener('click', (e) => {
